@@ -1,6 +1,21 @@
 (function() {
     'use strict';
 
+    const GITHUB_CDN_URL = 'https://cdn.jsdelivr.net/gh/Jacob-PO/nofee_chat@latest/';
+    const BACKUP_URL = 'https://raw.githubusercontent.com/Jacob-PO/nofee_chat/main/';
+
+    async function fetchWithFallback(filename) {
+        try {
+            const response = await fetch(GITHUB_CDN_URL + filename);
+            if (!response.ok) throw new Error('Primary fetch failed');
+            return await response.json();
+        } catch (error) {
+            console.log('Primary URL failed, trying backup...');
+            const response = await fetch(BACKUP_URL + filename);
+            return await response.json();
+        }
+    }
+
     window.NofeeChatbot = window.NofeeChatbot || {};
 
 /**
@@ -94,19 +109,13 @@ const dataManager = {
             showTypingIndicator();
             
             // 상품 데이터와 지역 데이터를 동시에 로드
-            const baseUrl = window.NOFEE_BASE_URL || 'https://cdn.jsdelivr.net/gh/Jacob-PO/nofee_chat@main/';
-
-            const [phoneResponse, regionResponse] = await Promise.all([
-                fetch(baseUrl + 'item.json'),
-                fetch(baseUrl + 'regions.json')
+            const [phoneData, regionData] = await Promise.all([
+                fetchWithFallback('item.json'),
+                fetchWithFallback('regions.json')
             ]);
 
-            if (!phoneResponse.ok || !regionResponse.ok) {
-                throw new Error(`HTTP error! status: ${phoneResponse.status}`);
-            }
-            
-            state.phoneData = await phoneResponse.json();
-            state.regionData = await regionResponse.json();
+            state.phoneData = phoneData;
+            state.regionData = regionData;
             state.filteredData = [...state.phoneData];
             
             console.log(`상품 데이터 로드 완료: ${state.phoneData.length}개`);
