@@ -491,16 +491,33 @@ window.NofeeAI = {
         
         if (agreed) {
             this.state.userData.consent = true;
+            
+            // 개인정보 동의값 설정 (필수!)
+            const consentField = document.getElementById('privacy_consent');
+            if (consentField) {
+                consentField.value = '동의함';
+            }
+            
             await this.addBotMessage('감사합니다! 신청이 접수되었습니다 🎉');
             
-            // 폼 데이터 채우기 및 제출
+            // 폼 데이터 채우기
             this.fillFormData();
-            this.submitForm();
+            
+            // 폼 자동 제출
+            setTimeout(() => {
+                this.submitForm();
+            }, 500);
             
             await this.delay(1000);
             await this.addBotMessage('곧 전문 상담사가 연락드릴 예정이에요.\n노피를 이용해주셔서 감사합니다! 💙');
             
         } else {
+            // 동의하지 않은 경우 동의값 초기화
+            const consentField = document.getElementById('privacy_consent');
+            if (consentField) {
+                consentField.value = '';
+            }
+            
             await this.addBotMessage('개인정보 동의 없이는 진행이 어려워요.\n다음에 다시 이용해주세요!');
             this.showButtons(['처음으로 돌아가기'], () => this.resetChat());
         }
@@ -513,27 +530,38 @@ window.NofeeAI = {
             customer_phone: this.state.userData.phone,
             customer_region: this.state.userData.region,
             customer_district: this.state.userData.district,
-            privacy_consent: '동의함',
             phone_model: this.state.selectedProduct.model,
             phone_carrier: this.state.selectedProduct.carrier,
             phone_price: this.state.selectedProduct.devicePrice,
             monthly_payment: this.state.selectedProduct.total,
+            contract_type: this.state.selectedProduct.contract,
+            activation_type: this.state.selectedProduct.activation,
             timestamp: new Date().toISOString(),
             session_id: this.state.sessionId
         };
         
         Object.entries(fields).forEach(([key, value]) => {
             const field = document.getElementById(key);
-            if (field) field.value = value;
+            if (field) field.value = value || '';
         });
     },
     
     // 폼 제출
     submitForm: function() {
         const form = document.getElementById('nofee-purchase-form');
-        if (form) {
+        const consentField = document.getElementById('privacy_consent');
+        
+        if (form && consentField && consentField.value === '동의함') {
+            console.log('폼 제출 시작');
             const submitBtn = form.querySelector('input[type="submit"]');
-            if (submitBtn) submitBtn.click();
+            if (submitBtn) {
+                submitBtn.click();
+            } else {
+                // submit 버튼이 없으면 form.submit() 사용
+                form.submit();
+            }
+        } else {
+            console.error('개인정보 동의가 필요합니다.');
         }
     },
     
@@ -674,6 +702,12 @@ window.NofeeAI = {
         this.state.filters = { priceRange: null, carrier: null, brand: null };
         this.state.userData = { dataUsage: null, preference: null, name: '', phone: '', region: '', district: '', consent: false };
         this.state.selectedProduct = null;
+        
+        // 개인정보 동의 필드 초기화
+        const consentField = document.getElementById('privacy_consent');
+        if (consentField) {
+            consentField.value = '';
+        }
         
         // 메시지 컨테이너 초기화
         if (this.state.messagesContainer) {
