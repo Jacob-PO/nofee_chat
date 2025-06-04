@@ -38,6 +38,7 @@ window.NofeeAI = {
     config: {
         GITHUB_CDN_URL: 'https://cdn.jsdelivr.net/gh/Jacob-PO/nofee_chat@main/',
         BACKUP_URL: 'https://raw.githubusercontent.com/Jacob-PO/nofee_chat/main/',
+        LOCAL_URL: '',
         TYPING_SPEED: 30,
         AI_THINKING_DELAY: 800
     },
@@ -106,40 +107,37 @@ window.NofeeAI = {
     loadData: async function() {
         console.log('데이터 로드 시작');
         
-        try {
-            // item.json 로드
-            const itemResponse = await fetch(this.config.GITHUB_CDN_URL + 'item.json');
-            const itemData = await itemResponse.json();
-            console.log('item.json 로드 성공:', itemData.length);
-            
-            // regions.json 로드
-            const regionResponse = await fetch(this.config.GITHUB_CDN_URL + 'regions.json');
-            const regionData = await regionResponse.json();
-            console.log('regions.json 로드 성공:', regionData.length);
-            
-            // 데이터 저장
-            this.state.phoneData = this.transformProducts(itemData);
-            this.state.regionData = regionData;
-            
-        } catch (error) {
-            console.error('데이터 로드 실패:', error);
-            
-            // 백업 URL 시도
+        const sources = [
+            this.config.GITHUB_CDN_URL,
+            this.config.BACKUP_URL,
+            this.config.LOCAL_URL
+        ];
+
+        let lastError = null;
+
+        for (const base of sources) {
+            if (!base && base !== '') continue; // skip if undefined
             try {
-                console.log('백업 URL로 재시도');
-                const itemResponse = await fetch(this.config.BACKUP_URL + 'item.json');
-                const itemData = await itemResponse.json();
-                
-                const regionResponse = await fetch(this.config.BACKUP_URL + 'regions.json');
-                const regionData = await regionResponse.json();
-                
+                const itemRes = await fetch(base + 'item.json');
+                const itemData = await itemRes.json();
+
+                const regionRes = await fetch(base + 'regions.json');
+                const regionData = await regionRes.json();
+
                 this.state.phoneData = this.transformProducts(itemData);
                 this.state.regionData = regionData;
-                
-            } catch (backupError) {
-                console.error('백업도 실패:', backupError);
-                throw new Error('데이터를 불러올 수 없습니다');
+
+                console.log('데이터 로드 성공 via', base || 'local');
+                lastError = null;
+                break;
+            } catch (err) {
+                lastError = err;
+                console.warn('데이터 로드 실패', base || 'local', err);
             }
+        }
+
+        if (lastError) {
+            throw new Error('데이터를 불러올 수 없습니다');
         }
     },
     
