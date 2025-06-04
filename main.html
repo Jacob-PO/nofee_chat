@@ -203,7 +203,7 @@
                 document.body.appendChild(s);
             }
 
-            appendScript('https://cdn.jsdelivr.net/gh/Jacob-PO/nofee_chat@main/main.js?v=' + Date.now(), function() {
+            appendScript('https://raw.githubusercontent.com/Jacob-PO/nofee_chat/main/main.js?v=' + Date.now(), function() {
                 if (window.NofeeAI && typeof window.NofeeAI.init === 'function') {
                     initNofee();
                 } else {
