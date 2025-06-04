@@ -3,6 +3,35 @@
     <!-- CSS 로드 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Jacob-PO/nofee_chat@main/main.css">
     
+    <!-- 대체 CSS (CDN 실패 시) -->
+    <style>
+        /* 기본 스타일 (CDN 로드 실패 시 최소한의 스타일 보장) */
+        .nofee-chat-container {
+            max-width: 430px;
+            margin: 0 auto;
+            background: #fff;
+            min-height: 100vh;
+            position: relative;
+        }
+        .nofee-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nofee-chat-messages {
+            padding: 20px;
+            overflow-y: auto;
+            height: calc(100vh - 140px);
+        }
+        .nofee-loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
+    
     <!-- 챗봇 컨테이너 -->
     <div class="nofee-chat-container">
         <!-- 헤더 -->
@@ -41,8 +70,14 @@
 
         <!-- 채팅 메시지 영역 -->
         <div class="nofee-chat-messages" id="nofeeChat">
-            <!-- AI 소개 -->
-            <div class="nofee-intro-section">
+            <!-- 로딩 메시지 -->
+            <div class="nofee-loading" id="nofeeLoading">
+                <p>노피 AI를 준비하고 있습니다...</p>
+                <p style="font-size: 12px; margin-top: 10px;">잠시만 기다려주세요 💙</p>
+            </div>
+            
+            <!-- AI 소개 (초기에는 숨김) -->
+            <div class="nofee-intro-section" style="display: none;" id="nofeeIntro">
                 <div class="nofee-intro-avatar">
                     <span>💙</span>
                 </div>
@@ -53,7 +88,7 @@
             </div>
             
             <!-- 운영시간 안내 (숨김) -->
-            <div class="nofee-operating-hours" id="operatingHours">
+            <div class="nofee-operating-hours" id="operatingHours" style="display: none;">
                 <p>평일: 오전 10:00 - 오후 7:00</p>
                 <p>주말: 오전 11:00 - 오후 6:00</p>
                 <p>공휴일: 휴무</p>
@@ -61,7 +96,7 @@
         </div>
 
         <!-- AI 생각중 애니메이션 -->
-        <div class="nofee-ai-thinking" id="aiThinking">
+        <div class="nofee-ai-thinking" id="aiThinking" style="display: none;">
             <div class="nofee-ai-dots">
                 <div class="nofee-ai-dot"></div>
                 <div class="nofee-ai-dot"></div>
@@ -72,19 +107,19 @@
 
         <!-- 하단 액션 버튼 -->
         <div class="nofee-input-area">
-            <button class="nofee-action-btn nofee-home-btn" onclick="NofeeAI.resetChat()">
+            <button class="nofee-action-btn nofee-home-btn" id="homeBtn">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                     <path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     <path d="M9 22V12H15V22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
             </button>
-            <button class="nofee-action-btn" onclick="NofeeAI.showPhoneList()">
+            <button class="nofee-action-btn" id="phoneBtn">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                     <rect x="5" y="2" width="14" height="20" rx="2" stroke="currentColor" stroke-width="2"/>
                     <line x1="12" y1="18" x2="12" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                 </svg>
             </button>
-            <button class="nofee-action-btn" style="background: #4ECDC4;" onclick="NofeeAI.showDeliveryInfo()">
+            <button class="nofee-action-btn" style="background: #4ECDC4;" id="deliveryBtn">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                     <path d="M10 12V17H4V12H10ZM10 12H16M16 12V7H20V12H16ZM16 12V17" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     <circle cx="7" cy="19" r="2" stroke="white" stroke-width="2"/>
@@ -122,28 +157,60 @@
         <input type="submit" value="Submit">
     </form>
 
-    <!-- JavaScript 로드 -->
-    <script src="https://cdn.jsdelivr.net/gh/Jacob-PO/nofee_chat@main/main.js"></script>
-    
-    <!-- 초기화 스크립트 -->
+    <!-- JavaScript 로드 및 초기화 -->
     <script>
-        // 운영시간 토글
+        // 전역 함수 정의
         function toggleOperatingHours() {
             const hours = document.getElementById('operatingHours');
-            hours.classList.toggle('show');
-        }
-        
-        // DOM 로드 완료 후 초기화
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', function() {
-                if (window.NofeeAI) {
-                    window.NofeeAI.init();
-                }
-            });
-        } else {
-            if (window.NofeeAI) {
-                window.NofeeAI.init();
+            if (hours) {
+                hours.style.display = hours.style.display === 'none' ? 'block' : 'none';
             }
         }
+        
+        // 스크립트 로드
+        function loadNofeeScript() {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/gh/Jacob-PO/nofee_chat@main/main.js?v=' + Date.now();
+            
+            script.onload = function() {
+                console.log('main.js 로드 완료');
+                
+                // 바로 초기화 시도
+                if (window.NofeeAI && typeof window.NofeeAI.init === 'function') {
+                    console.log('노피 AI 초기화 시작');
+                    
+                    // 버튼 이벤트 연결
+                    document.getElementById('homeBtn').onclick = function() {
+                        if (window.NofeeAI) window.NofeeAI.resetChat();
+                    };
+                    document.getElementById('phoneBtn').onclick = function() {
+                        if (window.NofeeAI) window.NofeeAI.showPhoneList();
+                    };
+                    document.getElementById('deliveryBtn').onclick = function() {
+                        if (window.NofeeAI) window.NofeeAI.showDeliveryInfo();
+                    };
+                    
+                    // 초기화
+                    window.NofeeAI.init();
+                } else {
+                    console.error('NofeeAI 객체를 찾을 수 없습니다');
+                    document.getElementById('nofeeLoading').innerHTML = 
+                        '<p>초기화에 실패했습니다.</p>' +
+                        '<button onclick="location.reload()" style="margin-top: 10px; padding: 8px 16px; background: #5C5CFF; color: white; border: none; border-radius: 20px; cursor: pointer;">새로고침</button>';
+                }
+            };
+            
+            script.onerror = function() {
+                console.error('main.js 로드 실패');
+                document.getElementById('nofeeLoading').innerHTML = 
+                    '<p>스크립트 로드에 실패했습니다.</p>' +
+                    '<button onclick="location.reload()" style="margin-top: 10px; padding: 8px 16px; background: #5C5CFF; color: white; border: none; border-radius: 20px; cursor: pointer;">새로고침</button>';
+            };
+            
+            document.body.appendChild(script);
+        }
+        
+        // 즉시 실행
+        loadNofeeScript();
     </script>
 </div>
