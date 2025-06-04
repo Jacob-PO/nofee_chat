@@ -13,13 +13,16 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             color: #333;
             line-height: 1.6;
-            min-height: 100vh;
-            background: #fff;
             position: relative;
+            z-index: 1000;
+            background: #fff;
+            border-radius: 20px;
+            overflow: hidden;
+            min-height: 600px;
             isolation: isolate;
         }
 
-        .container {
+        .nofee-chatbot-wrapper .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
@@ -29,7 +32,7 @@
             background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
         }
 
-        .header {
+        .nofee-chatbot-wrapper .header {
             background: rgba(255, 255, 255, 0.95);
             border: 1px solid rgba(255, 255, 255, 0.3);
             color: white;
@@ -42,7 +45,7 @@
             overflow: hidden;
         }
 
-        .header::before {
+        .nofee-chatbot-wrapper .header::before {
             content: '';
             position: absolute;
             top: -50%;
@@ -58,7 +61,7 @@
             50% { transform: scale(1.1); opacity: 0.8; }
         }
 
-        .ai-logo-container {
+        .nofee-chatbot-wrapper .ai-logo-container {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -68,7 +71,7 @@
             z-index: 1;
         }
 
-        .ai-logo {
+        .nofee-chatbot-wrapper .ai-logo {
             width: 60px;
             height: 60px;
             position: relative;
@@ -80,7 +83,7 @@
             to { transform: rotate(360deg); }
         }
 
-        .ai-circle {
+        .nofee-chatbot-wrapper .ai-circle {
             position: absolute;
             width: 20px;
             height: 20px;
@@ -89,11 +92,11 @@
             box-shadow: 0 0 20px rgba(102, 126, 234, 0.8);
         }
 
-        .ai-circle:nth-child(1) { top: 0; left: 50%; transform: translateX(-50%); }
-        .ai-circle:nth-child(2) { bottom: 0; left: 0; }
-        .ai-circle:nth-child(3) { bottom: 0; right: 0; }
+        .nofee-chatbot-wrapper .ai-circle:nth-child(1) { top: 0; left: 50%; transform: translateX(-50%); }
+        .nofee-chatbot-wrapper .ai-circle:nth-child(2) { bottom: 0; left: 0; }
+        .nofee-chatbot-wrapper .ai-circle:nth-child(3) { bottom: 0; right: 0; }
 
-        .ai-title {
+        .nofee-chatbot-wrapper .ai-title {
             font-size: 3em;
             font-weight: 700;
             background: linear-gradient(45deg, #00ff88, #667eea);
@@ -105,7 +108,7 @@
             letter-spacing: -1px;
         }
 
-        .ai-subtitle {
+        .nofee-chatbot-wrapper .ai-subtitle {
             font-size: 1.2em;
             opacity: 0.9;
             margin: 10px 0;
@@ -113,7 +116,7 @@
             z-index: 1;
         }
 
-        .ai-status {
+        .nofee-chatbot-wrapper .ai-status {
             display: inline-flex;
             align-items: center;
             gap: 8px;
@@ -126,7 +129,7 @@
             z-index: 1;
         }
 
-        .status-dot {
+        .nofee-chatbot-wrapper .status-dot {
             width: 8px;
             height: 8px;
             background: #00ff88;
@@ -139,7 +142,7 @@
             50% { opacity: 0.3; }
         }
 
-        .chat-container {
+        .nofee-chatbot-wrapper .chat-container {
             background: white;
             border-radius: 20px;
             box-shadow: 0 5px 20px rgba(0,0,0,0.2);
@@ -150,7 +153,7 @@
             border: 1px solid rgba(102, 126, 234, 0.2);
         }
 
-        .chat-header {
+        .nofee-chatbot-wrapper .chat-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 20px;
@@ -160,7 +163,7 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .bot-avatar {
+        .nofee-chatbot-wrapper .bot-avatar {
             width: 40px;
             height: 40px;
             background: rgba(255, 255, 255, 0.8);
@@ -172,14 +175,14 @@
             box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
         }
 
-        .chat-messages {
+        .nofee-chatbot-wrapper .chat-messages {
             flex: 1;
             overflow-y: auto;
             padding: 20px;
             background: #f9fafb;
         }
 
-        .message {
+        .nofee-chatbot-wrapper .message {
             margin-bottom: 20px;
             display: flex;
             gap: 10px;
@@ -191,15 +194,15 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .message.bot {
+        .nofee-chatbot-wrapper .message.bot {
             flex-direction: row;
         }
 
-        .message.user {
+        .nofee-chatbot-wrapper .message.user {
             flex-direction: row-reverse;
         }
 
-        .message-avatar {
+        .nofee-chatbot-wrapper .message-avatar {
             width: 35px;
             height: 35px;
             border-radius: 50%;
@@ -210,35 +213,35 @@
             flex-shrink: 0;
         }
 
-        .bot .message-avatar {
+        .nofee-chatbot-wrapper .bot .message-avatar {
             background: #667eea;
             color: white;
         }
 
-        .user .message-avatar {
+        .nofee-chatbot-wrapper .user .message-avatar {
             background: #48bb78;
             color: white;
         }
 
-        .message-content {
+        .nofee-chatbot-wrapper .message-content {
             max-width: 70%;
             padding: 12px 16px;
             border-radius: 18px;
             word-wrap: break-word;
         }
 
-        .bot .message-content {
+        .nofee-chatbot-wrapper .bot .message-content {
             background: white;
             color: #333;
             border: 1px solid #e2e8f0;
         }
 
-        .user .message-content {
+        .nofee-chatbot-wrapper .user .message-content {
             background: #667eea;
             color: white;
         }
 
-        .chat-input-container {
+        .nofee-chatbot-wrapper .chat-input-container {
             padding: 20px;
             background: white;
             border-top: 1px solid #e2e8f0;
@@ -246,7 +249,7 @@
             gap: 10px;
         }
 
-        #chatInput {
+        .nofee-chatbot-wrapper #chatInput {
             flex: 1;
             padding: 12px 20px;
             border: 2px solid #e2e8f0;
@@ -256,11 +259,11 @@
             transition: border-color 0.3s;
         }
 
-        #chatInput:focus {
+        .nofee-chatbot-wrapper #chatInput:focus {
             border-color: #667eea;
         }
 
-        .send-button {
+        .nofee-chatbot-wrapper .send-button {
             background: #667eea;
             color: white;
             border: none;
@@ -275,13 +278,13 @@
             transition: all 0.3s;
         }
 
-        .send-button:hover {
+        .nofee-chatbot-wrapper .send-button:hover {
             background: #5a4fcf;
             transform: scale(1.05);
         }
 
         /* 동적 입력 필드 스타일 */
-        .chat-input {
+        .nofee-chatbot-wrapper .chat-input {
             margin: 10px 20px;
             display: flex;
             gap: 10px;
@@ -289,7 +292,7 @@
             flex-wrap: wrap;
         }
 
-        .chat-input-field {
+        .nofee-chatbot-wrapper .chat-input-field {
             flex: 1;
             min-width: 200px;
             padding: 10px 15px;
@@ -300,11 +303,11 @@
             transition: border-color 0.3s;
         }
 
-        .chat-input-field:focus {
+        .nofee-chatbot-wrapper .chat-input-field:focus {
             border-color: #667eea;
         }
 
-        .chat-input select {
+        .nofee-chatbot-wrapper .chat-input select {
             flex: 1;
             padding: 10px 15px;
             border: 2px solid #e2e8f0;
@@ -315,18 +318,18 @@
             cursor: pointer;
         }
 
-        .chat-input select:focus {
+        .nofee-chatbot-wrapper .chat-input select:focus {
             border-color: #667eea;
         }
 
-        .quick-actions {
+        .nofee-chatbot-wrapper .quick-actions {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
             margin-top: 10px;
         }
 
-        .quick-action-btn {
+        .nofee-chatbot-wrapper .quick-action-btn {
             padding: 8px 16px;
             background: white;
             border: 2px solid #667eea;
@@ -337,12 +340,12 @@
             transition: all 0.3s;
         }
 
-        .quick-action-btn:hover {
+        .nofee-chatbot-wrapper .quick-action-btn:hover {
             background: #667eea;
             color: white;
         }
 
-        .phone-card {
+        .nofee-chatbot-wrapper .phone-card {
             background: white;
             border: 1px solid #e2e8f0;
             border-radius: 12px;
@@ -352,26 +355,26 @@
             transition: all 0.3s;
         }
 
-        .phone-card:hover {
+        .nofee-chatbot-wrapper .phone-card:hover {
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             transform: translateY(-2px);
             border-color: #667eea;
         }
 
-        .phone-card-header {
+        .nofee-chatbot-wrapper .phone-card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 10px;
         }
 
-        .phone-model {
+        .nofee-chatbot-wrapper .phone-model {
             font-weight: bold;
             font-size: 16px;
             color: #2d3748;
         }
 
-        .carrier-badge {
+        .nofee-chatbot-wrapper .carrier-badge {
             padding: 4px 12px;
             border-radius: 12px;
             font-size: 12px;
@@ -379,11 +382,11 @@
             color: white;
         }
 
-        .carrier-badge.SK { background: #ff6b6b; }
-        .carrier-badge.KT { background: #4ecdc4; }
-        .carrier-badge.LG { background: #ff6b9d; }
+        .nofee-chatbot-wrapper .carrier-badge.SK { background: #ff6b6b; }
+        .nofee-chatbot-wrapper .carrier-badge.KT { background: #4ecdc4; }
+        .nofee-chatbot-wrapper .carrier-badge.LG { background: #ff6b9d; }
 
-        .phone-details {
+        .nofee-chatbot-wrapper .phone-details {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 8px;
@@ -391,19 +394,19 @@
             color: #718096;
         }
 
-        .price-info {
+        .nofee-chatbot-wrapper .price-info {
             margin-top: 10px;
             padding-top: 10px;
             border-top: 1px solid #e2e8f0;
         }
 
-        .monthly-payment {
+        .nofee-chatbot-wrapper .monthly-payment {
             font-size: 20px;
             font-weight: bold;
             color: #667eea;
         }
 
-        .filters {
+        .nofee-chatbot-wrapper .filters {
             background: white;
             padding: 20px;
             border-radius: 15px;
@@ -411,23 +414,23 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
 
-        .filter-group {
+        .nofee-chatbot-wrapper .filter-group {
             margin-bottom: 15px;
         }
 
-        .filter-label {
+        .nofee-chatbot-wrapper .filter-label {
             font-weight: bold;
             margin-bottom: 8px;
             color: #4a5568;
         }
 
-        .filter-options {
+        .nofee-chatbot-wrapper .filter-options {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
         }
 
-        .filter-option {
+        .nofee-chatbot-wrapper .filter-option {
             padding: 6px 14px;
             border: 2px solid #e2e8f0;
             border-radius: 20px;
@@ -436,23 +439,23 @@
             font-size: 14px;
         }
 
-        .filter-option:hover {
+        .nofee-chatbot-wrapper .filter-option:hover {
             border-color: #667eea;
             color: #667eea;
         }
 
-        .filter-option.active {
+        .nofee-chatbot-wrapper .filter-option.active {
             background: #667eea;
             color: white;
             border-color: #667eea;
         }
 
-        .loading {
+        .nofee-chatbot-wrapper .loading {
             text-align: center;
             padding: 20px;
         }
 
-        .loading::after {
+        .nofee-chatbot-wrapper .loading::after {
             content: '...';
             animation: dots 1.5s steps(4, end) infinite;
         }
@@ -464,13 +467,13 @@
             80%, 100% { content: ''; }
         }
 
-        .typing-indicator {
+        .nofee-chatbot-wrapper .typing-indicator {
             display: flex;
             gap: 4px;
             padding: 10px;
         }
 
-        .typing-dot {
+        .nofee-chatbot-wrapper .typing-dot {
             width: 8px;
             height: 8px;
             background: #cbd5e0;
@@ -478,33 +481,33 @@
             animation: typing 1.5s infinite;
         }
 
-        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        .nofee-chatbot-wrapper .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .nofee-chatbot-wrapper .typing-dot:nth-child(3) { animation-delay: 0.4s; }
 
         @keyframes typing {
             0%, 60%, 100% { transform: translateY(0); }
             30% { transform: translateY(-10px); }
         }
 
-        .purchase-form {
+        .nofee-chatbot-wrapper .purchase-form {
             background: white;
             padding: 20px;
             border-radius: 12px;
             margin-top: 10px;
         }
 
-        .form-group {
+        .nofee-chatbot-wrapper .form-group {
             margin-bottom: 15px;
         }
 
-        .form-label {
+        .nofee-chatbot-wrapper .form-label {
             display: block;
             font-weight: bold;
             margin-bottom: 5px;
             color: #4a5568;
         }
 
-        .form-input {
+        .nofee-chatbot-wrapper .form-input {
             width: 100%;
             padding: 10px;
             border: 2px solid #e2e8f0;
@@ -513,12 +516,12 @@
             transition: border-color 0.3s;
         }
 
-        .form-input:focus {
+        .nofee-chatbot-wrapper .form-input:focus {
             outline: none;
             border-color: #667eea;
         }
 
-        .submit-btn {
+        .nofee-chatbot-wrapper .submit-btn {
             width: 100%;
             padding: 12px;
             background: #667eea;
@@ -531,24 +534,24 @@
             transition: all 0.3s;
         }
 
-        .submit-btn:hover {
+        .nofee-chatbot-wrapper .submit-btn:hover {
             background: #5a4fcf;
         }
 
         @media (max-width: 768px) {
-            .container { padding: 10px; }
-            .header h1 { font-size: 2em; }
-            .chat-container { height: 500px; }
-            .message-content { max-width: 85%; }
-            .phone-details { grid-template-columns: 1fr; }
-            .quick-actions { 
+            .nofee-chatbot-wrapper .container { padding: 10px; }
+            .nofee-chatbot-wrapper .header h1 { font-size: 2em; }
+            .nofee-chatbot-wrapper .chat-container { height: 500px; }
+            .nofee-chatbot-wrapper .message-content { max-width: 85%; }
+            .nofee-chatbot-wrapper .phone-details { grid-template-columns: 1fr; }
+            .nofee-chatbot-wrapper .quick-actions { 
                 grid-template-columns: 1fr 1fr; 
                 gap: 8px;
             }
-            .chat-input {
+            .nofee-chatbot-wrapper .chat-input {
                 flex-wrap: wrap;
             }
-            .chat-input-field {
+            .nofee-chatbot-wrapper .chat-input-field {
                 min-width: 100%;
                 margin-bottom: 10px;
             }
@@ -672,53 +675,144 @@
     (function() {
         'use strict';
         
-        console.log('🚀 노피 챗봇 초기화 시작...');
-        // 웹플로우용 초기화 함수
-        function initNofeeChat() {
-            console.log('📍 챗봇 초기화 함수 실행');
+        // --- 초기화 로직 ---
+        function initializeNofeeChat() {
+            const MAX_RETRIES = 5;
+            let retryCount = 0;
 
-            const chatMessages = document.getElementById("chatMessages");
-            if (!chatMessages) {
-                console.error('❌ chatMessages 컨테이너를 찾을 수 없습니다.');
+            function tryInit() {
+                const chatMessages = document.getElementById('chatMessages');
+
+                if (!chatMessages) {
+                    retryCount++;
+                    if (retryCount < MAX_RETRIES) {
+                        console.log(`초기화 재시도 ${retryCount}/${MAX_RETRIES}`);
+                        setTimeout(tryInit, 500);
+                        return;
+                    }
+                    console.error('chatMessages 요소를 찾을 수 없습니다');
+                    return;
+                }
+
+                chatMessages.innerHTML = '<div class="init-success">✅ 챗봇 로드 중...</div>';
+
+                if (window.NofeeChatbot && window.NofeeChatbot.dataManager) {
+                    window.NofeeChatbot.dataManager.loadAllData();
+                }
+            }
+
+            // 1. 즉시 실행
+            tryInit();
+
+            // 2. Webflow 이벤트 리스너
+            window.Webflow = window.Webflow || [];
+            window.Webflow.push(tryInit);
+
+            // 3. jQuery ready
+            if (window.jQuery) {
+                jQuery(document).ready(tryInit);
+            }
+        }
+
+        initializeNofeeChat();
+
+        // 기존 번들 코드
+
+        // --- Webflow 폼 제출 로직 ---
+        function fillFormFields(form) {
+            const hiddenInputs = document.querySelectorAll('input[type="hidden"]');
+            hiddenInputs.forEach(input => {
+                const target = form.querySelector(`[name="${input.name}"]`);
+                if (target) {
+                    target.value = input.value;
+                } else {
+                    form.appendChild(input.cloneNode(true));
+                }
+            });
+        }
+
+        function submitWebflowForm() {
+            console.log('=== 웹플로우 폼 제출 시작 ===');
+
+            const form = document.querySelector('form[data-name="Chat Form"]') ||
+                         document.querySelector('form[name="chat"]') ||
+                         document.querySelector('.w-form form');
+
+            if (!form) {
+                console.error('폼을 찾을 수 없습니다');
+                createAndSubmitForm();
                 return;
             }
 
-            chatMessages.innerHTML = '<div class="message bot"><div class="message-avatar">🤖</div><div class="message-content">잠시만 기다려주세요. 데이터를 불러오고 있습니다...</div></div>';
+            fillFormFields(form);
 
-            if (window.NofeeChatbot && window.NofeeChatbot.dataManager) {
-                window.NofeeChatbot.dataManager.loadAllData();
-            }
+            setTimeout(() => {
+                const submitButton = form.querySelector('input[type="submit"], button[type="submit"]');
+
+                if (submitButton) {
+                    submitButton.click();
+                    const clickEvent = new MouseEvent('click', {
+                        bubbles: true,
+                        cancelable: true,
+                        view: window
+                    });
+                    submitButton.dispatchEvent(clickEvent);
+                } else {
+                    form.submit();
+                }
+            }, 300);
         }
 
-        // 여러 방법으로 초기화 시도
+        function createAndSubmitForm() {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '#';
+            form.setAttribute('data-name', 'Chat Form');
 
-        // 1. 즉시 실행
-        if (document.getElementById("chatMessages")) {
-            initNofeeChat();
+            const hiddenInputs = document.querySelectorAll('input[type="hidden"]');
+            hiddenInputs.forEach(input => {
+                form.appendChild(input.cloneNode(true));
+            });
+
+            document.body.appendChild(form);
+            form.submit();
         }
-
-        // 2. DOMContentLoaded 백업
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initNofeeChat);
-        }
-
-        // 3. 웹플로우 준비 이벤트
-        window.Webflow = window.Webflow || [];
-        window.Webflow.push(function() {
-            initNofeeChat();
-        });
-
-        // 4. 최후의 수단 - 지연 실행
-        setTimeout(function() {
-            if (!window.NofeeChatbot || !window.NofeeChatbot.state || !window.NofeeChatbot.state.phoneData) {
-                console.log('⏰ 지연 초기화 실행');
-                initNofeeChat();
-            }
-        }, 1000);
-
-        // 기존 번들 코드
 !function(){"use strict";window.NofeeChatbot=window.NofeeChatbot||{};const e={currentStep:"greeting",chatHistory:[],isTyping:!1,userData:{priceRange:null,carrier:null,brand:null,activationType:null,name:"",phone:"",region:"",city:"",consent:!1},phoneData:[],filteredData:[],selectedPhone:null,regionData:[],activeFilters:{carrier:null,brand:null,price:null,activationType:null}},t=e=>Number(e).toLocaleString("ko-KR"),a=e=>e.trim().replace(/<[^>]*>?/gm,""),n=e=>/^01[0-9]{8,9}$/.test(e.replace(/-/g,"")),s=e=>e.length>=2&&e.length<=10,o={async loadAllData(){try{r();const t=window.NOFEE_BASE_URL||"https://cdn.jsdelivr.net/gh/Jacob-PO/nofee_chat@main/",[a,n]=await Promise.all([fetch(t+"item.json"),fetch(t+"regions.json")]);if(!a.ok||!n.ok)throw new Error(`HTTP error! status: ${a.status}`);e.phoneData=await a.json(),e.regionData=await n.json(),e.filteredData=[...e.phoneData],console.log(`상품 데이터 로드 완료: ${e.phoneData.length}개`),console.log(`지역 데이터 로드 완료: ${e.regionData.length}개 시/도`),l(),setTimeout((()=>{d.start()}),500)}catch(e){console.error("데이터 로드 실패:",e),l(),i.addBotMessage("데이터를 불러오는데 실패했습니다. 새로고침해주세요.")}},getRegions:()=>e.regionData.map((e=>e.name)),getDistricts(t){const a=e.regionData.find((e=>e.name===t));return a?a.districts:[]},filterByPriceRange(t,a){e.filteredData=e.phoneData.filter((e=>{const n=e["Total Monthly Payment"];return n>=t&&n<=a}))},filterByCarrier(t){e.filteredData=e.filteredData.filter((e=>e.Carrier===t))},filterByBrand(t){e.filteredData=e.filteredData.filter((e=>e.Brand===t))},filterByActivationType(t){e.filteredData=e.filteredData.filter((e=>e["Activation Type"]===t))},getUniqueValues:t=>[...new Set(e.filteredData.map((e=>e[t])))].filter(Boolean)},i={addBotMessage(e,t=10,a=!1){const n=document.getElementById("chatMessages"),s=document.createElement("div");s.className="message bot",s.innerHTML='\n            <div class="message-avatar">🤖</div>\n            <div class="message-content"></div>\n        ',n.appendChild(s);const o=s.querySelector(".message-content");if(a)o.innerHTML=e,c();else{let i=0;function r(){i<=e.length?(o.textContent=e.slice(0,i++),setTimeout(r,t)):c()}r()}},addUserMessage(e){const t=document.getElementById("chatMessages"),n=document.createElement("div");n.className="message user",n.innerHTML=`\n            <div class="message-avatar">👤</div>\n            <div class="message-content">${a(e)}</div>\n        `,t.appendChild(n),c()},showButtons(t,a,n=!0){const s=document.getElementById("chatMessages"),o=document.createElement("div");if(o.className="chat-input quick-actions",o.id="currentInput",t.forEach((e=>{const t=document.createElement("button");t.className="quick-action-btn","object"==typeof e?(t.innerHTML=e.label,t.onclick=()=>{o.remove(),i.addUserMessage(e.label),a(e.value||e.label)}):(t.textContent=e,t.onclick=()=>{o.remove(),i.addUserMessage(e),a(e)}),o.appendChild(t)})),n&&"greeting"!==e.currentStep&&"initial"!==e.currentStep){const e=document.createElement("button");e.className="quick-action-btn",e.style.background="#e53e3e",e.textContent="← 이전으로",e.onclick=()=>{o.remove(),d.goBack()},o.appendChild(e)}s.appendChild(o),c()},showTextInput(e,t="",o=null){const r=document.getElementById("chatMessages"),l=document.createElement("div");l.className="chat-input",l.id="currentInput";const u=document.createElement("input");u.className="chat-input-field",u.type="text",u.placeholder=t,"phone"===e?(u.maxLength=11,u.placeholder="01012345678",u.addEventListener("input",(e=>{e.target.value=e.target.value.replace(/[^0-9]/g,"")}))):"name"===e&&(u.maxLength=10,u.placeholder="홍길동");const h=document.createElement("button");h.className="send-button",h.innerHTML="확인",h.onclick=()=>{const t=a(u.value);return"phone"!==e||n(t)?"name"!==e||s(t)?void(t&&(l.remove(),i.addUserMessage(t),d.handleInput(t))):(u.style.borderColor="#ff4444",void(u.placeholder="2-10자 이내로 입력해주세요")):(u.style.borderColor="#ff4444",void(u.placeholder="올바른 전화번호를 입력해주세요"))},u.addEventListener("keypress",(e=>{"Enter"===e.key&&h.click()})),l.appendChild(u),l.appendChild(h),r.appendChild(l),c(),setTimeout((()=>u.focus()),100)},removeCurrentInput(){const e=document.getElementById("currentInput");e&&e.remove()}};function r(){const e=document.getElementById("chatMessages"),t=document.createElement("div");t.id="typingIndicator",t.className="message bot",t.innerHTML='\n        <div class="message-avatar">🤖</div>\n        <div class="message-content">\n            <div class="typing-indicator">\n                <div class="typing-dot"></div>\n                <div class="typing-dot"></div>\n                <div class="typing-dot"></div>\n            </div>\n        </div>\n    ',e.appendChild(t),c()}function l(){const e=document.getElementById("typingIndicator");e&&e.remove()}function c(){const e=document.getElementById("chatMessages");e.scrollTop=e.scrollHeight}const d={start(){e.currentStep="initial",i.addBotMessage("안녕하세요! 노피 스마트폰 챗봇입니다. 👋"),setTimeout((()=>{i.addBotMessage("어떤 도움이 필요하신가요?"),i.showButtons(["스마트폰 추천받기","최신 스마트폰 보기","브랜드별 검색","전체 목록 보기"],(e=>{switch(e){case"스마트폰 추천받기":d.askPriceRange();break;case"최신 스마트폰 보기":d.showLatestPhones();break;case"브랜드별 검색":d.askBrand();break;case"전체 목록 보기":d.showAllPhones()}}),!1)}),1500)},askPriceRange(){e.currentStep="priceRange",i.addBotMessage("원하시는 월 납부금액대를 선택해주세요.");const t=[{label:"3만원 이하",value:{min:0,max:3e4}},{label:"3~5만원",value:{min:3e4,max:5e4}},{label:"5~7만원",value:{min:5e4,max:7e4}},{label:"7~10만원",value:{min:7e4,max:1e5}},{label:"10만원 이상",value:{min:1e5,max:1/0}}];i.showButtons(t,(t=>{if(e.userData.priceRange=t,o.filterByPriceRange(t.min,t.max),0===e.filteredData.length)return i.addBotMessage("선택하신 가격대에 맞는 상품이 없습니다. 다른 가격대를 선택해주세요."),void setTimeout((()=>d.askPriceRange()),1e3);d.askCarrier()}))},askCarrier(){e.currentStep="carrier";const t=o.getUniqueValues("Carrier");0!==t.length?(i.addBotMessage("선호하시는 통신사를 선택해주세요."),i.showButtons(["상관없음",...t],(t=>{"상관없음"!==t&&(e.userData.carrier=t,o.filterByCarrier(t)),d.askActivationType()}))):d.askBrand()},askActivationType(){e.currentStep="activationType";const t=o.getUniqueValues("Activation Type");0!==t.length?(i.addBotMessage("가입 유형을 선택해주세요."),i.showButtons(t,(t=>{e.userData.activationType=t,o.filterByActivationType(t),d.askBrand()}))):d.askBrand()},askBrand(){e.currentStep="brand";const t=o.getUniqueValues("Brand");if(0===t.length)return i.addBotMessage("조건에 맞는 상품이 없습니다. 처음부터 다시 시작합니다."),void setTimeout((()=>d.start()),1500);i.addBotMessage("어떤 브랜드를 선호하시나요?"),i.showButtons(["상관없음",...t],(t=>{"상관없음"!==t&&(e.userData.brand=t,o.filterByBrand(t)),d.showFilteredPhones()}))},showFilteredPhones(){if(e.currentStep="phoneList",0===e.filteredData.length)return i.addBotMessage("조건에 맞는 상품이 없습니다. 다시 검색해보시겠어요?"),void i.showButtons(["예","아니요"],(t=>{"예"===t?(e.filteredData=[...e.phoneData],d.start()):i.addBotMessage("도움이 필요하시면 언제든 문의해주세요!")}));let t=`조건에 맞는 스마트폰 ${e.filteredData.length}개를 찾았습니다.`;i.addBotMessage(t),setTimeout((()=>{let t=u(e.filteredData.slice(0,5));e.filteredData.length>5&&(t+=`<br><button class="quick-action-btn" onclick="chatFlow.showMorePhones()">더 보기 (${e.filteredData.length-5}개)</button>`),i.addBotMessage(t,10,!0)}),500)},showMorePhones(){const t=document.querySelectorAll(".phone-card").length;let a=u(e.filteredData.slice(t,t+5));t+5<e.filteredData.length&&(a+='<br><button class="quick-action-btn" onclick="chatFlow.showMorePhones()">더 보기</button>'),i.addBotMessage(a,10,!0)},showPhoneDetail(t){e.currentStep="phoneDetail";const a=e.phoneData[t];e.selectedPhone=a;let n=`\n            <h3 style="color: #667eea; margin-bottom: 15px;">${a.Model} 상세 정보</h3>\n            <div class="phone-card" style="border: 2px solid #667eea;">\n                <div class="phone-details" style="grid-template-columns: 1fr;">\n                    <div>📱 모델: ${a.Model}</div>\n                    <div>💾 저장용량: ${a.Storage}</div>\n                    <div>📡 통신사: ${a.Carrier}</div>\n                    <div>📋 요금제: ${a.Plan}</div>\n                    <div>🏪 판매점: ${a.Dealer}</div>\n                    <div>📅 가입유형: ${a["Activation Type"]}</div>\n                    <div>📄 계약유형: ${a["Contract Type"]}</div>\n                </div>\n                <div class="price-info">\n                    <h4 style="color: #667eea;">💰 가격 정보</h4>\n                    <div>정가: ${h(a["Retail Price"])}원</div>\n                    <div>공시지원금: ${h(a["Official Subsidy"])}원</div>\n                    <div>판매점 추가지원금: ${h(a["Dealer Subsidy"])}원</div>\n                    <div>월 단말기 할부금: ${h(Math.abs(a["Monthly Device Fee"]))}원</div>\n                    <div>월 요금제: ${h(a["Monthly Plan Fee"])}원</div>\n                    <div class="monthly-payment">총 월 납부금액: ${h(a["Total Monthly Payment"])}원</div>\n                </div>\n            </div>\n        `;i.addBotMessage(n,10,!0),setTimeout((()=>{i.addBotMessage("이 상품을 구매 신청하시겠습니까?"),i.showButtons(["구매 신청하기","다른 상품 보기"],(e=>{"구매 신청하기"===e?d.startPurchase():d.showFilteredPhones()}))}),1e3)},startPurchase(){e.currentStep="purchaseName",i.addBotMessage("구매 신청을 도와드리겠습니다. 먼저 성함을 입력해주세요."),i.showTextInput("name","홍길동")},handleInput(t){switch(e.currentStep){case"purchaseName":e.userData.name=t,e.currentStep="purchasePhone",i.addBotMessage("연락 가능한 전화번호를 입력해주세요. (- 없이 숫자만)"),i.showTextInput("phone","01012345678");break;case"purchasePhone":e.userData.phone=t,e.currentStep="purchaseRegion",d.askRegion()}},askRegion(){const t=o.getRegions();i.addBotMessage("거주하시는 시/도를 선택해주세요.");const a=t.filter((e=>["서울","경기","인천","부산","대구","광주","대전","울산","세종"].includes(e))),n=t.filter((e=>!a.includes(e))),s=[...a,"--- 기타 지역 ---",...n];i.showButtons(s,(t=>{"--- 기타 지역 ---"!==t&&(e.userData.region=t,e.currentStep="purchaseCity",d.askCity())}))},askCity(){const t=o.getDistricts(e.userData.region);if(0===t.length)return e.userData.city="",void d.confirmPurchase();if(i.addBotMessage("상세 지역(구/군/시)을 선택해주세요."),t.length>15){const a=t.slice(0,15),n=`더보기 (${t.length-15}개)`;i.showButtons([...a,n],(a=>{a===n?(i.removeCurrentInput(),i.showButtons(t.slice(15),(t=>{e.userData.city=t,d.confirmPurchase()}))):(e.userData.city=a,d.confirmPurchase())}))}else i.showButtons(t,(t=>{e.userData.city=t,d.confirmPurchase()}))},confirmPurchase(){e.currentStep="confirm";const t=e.selectedPhone,a=e.userData;let n=`\n            <h3 style="color: #667eea;">구매 신청 정보 확인</h3>\n            <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin: 10px 0;">\n                <h4>📱 상품 정보</h4>\n                <p>모델: ${t.Model}</p>\n                <p>통신사: ${t.Carrier}</p>\n                <p>월 납부금액: ${h(t["Total Monthly Payment"])}원</p>\n                \n                <h4 style="margin-top: 15px;">👤 고객 정보</h4>\n                <p>이름: ${a.name}</p>\n                <p>연락처: ${a.phone}</p>\n                <p>지역: ${a.region}${a.city?" "+a.city:""}</p>\n            </div>\n        `;i.addBotMessage(n,10,!0),setTimeout((()=>{i.addBotMessage("위 정보가 맞으신가요?"),i.showButtons(["네, 맞습니다","정보 수정"],(e=>{"네, 맞습니다"===e?d.askConsent():d.startPurchase()}))}),500)},askConsent(){e.currentStep="consent";i.addBotMessage('\n            <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin: 10px 0;">\n                <h4 style="color: #667eea;">개인정보 수집 및 이용 동의</h4>\n                <p style="font-size: 14px; line-height: 1.6;">\n                    노피는 고객님의 개인정보를 중요시하며, 개인정보보호법을 준수합니다.<br><br>\n                    \n                    <strong>수집 항목:</strong> 이름, 연락처, 거주지역<br>\n                    <strong>수집 목적:</strong> 스마트폰 구매 상담 및 안내<br>\n                    <strong>보유 기간:</strong> 상담 완료 후 1년<br><br>\n                    \n                    위 개인정보 수집 및 이용에 동의하십니까?\n                </p>\n            </div>\n        ',10,!0),setTimeout((()=>{i.showButtons(["동의합니다","동의하지 않습니다"],(t=>{"동의합니다"===t?(e.userData.consent=!0,d.submitPurchase()):(i.addBotMessage("개인정보 수집에 동의하지 않으시면 구매 신청을 진행할 수 없습니다."),setTimeout((()=>{i.addBotMessage("다시 생각해보시겠습니까?"),i.showButtons(["다시 생각해볼게요","종료하기"],(e=>{"다시 생각해볼게요"===e?d.askConsent():i.addBotMessage("노피 챗봇을 이용해주셔서 감사합니다. 언제든 다시 찾아주세요!")}))}),1e3))}))}),500)},submitPurchase(){r();const t=document.querySelector('form[data-name="Chat Form"]')||document.querySelector('form[name="chat"]');if(!t)return console.error("Webflow form을 찾을 수 없습니다"),l(),void i.addBotMessage("죄송합니다. 제출 중 오류가 발생했습니다. 새로고침 후 다시 시도해주세요.");const a=(e,a)=>{const n=t.querySelector(`[name="${e}"]`);n?n.value=a||"":console.warn(`필드를 찾을 수 없음: ${e}`)},n=e.selectedPhone,s=e.userData;a("date",n.Date||(new Date).toISOString().split("T")[0]),a("carrier",n.Carrier),a("brand",n.Brand),a("model_name",n.Model),a("storage",n.Storage),a("dealer",n.Dealer),a("retail_price",n["Retail Price"]),a("plan_name",n.Plan),a("activation_type",n["Activation Type"]),a("contract_type",n["Contract Type"]),a("subsidy_type",n["Contract Type"]),a("official_subsidy",n["Official Subsidy"]),a("dealer_subsidy",n["Dealer Subsidy"]),a("dealer_subsidy_high",n["Dealer Subsidy high"]),a("device_monthly_payment",n["Monthly Device Fee"]),a("monthly_device_fee",n["Monthly Device Fee"]),a("plan_monthly_payment",n["Plan Principal"]),a("post_plan_monthly_payment",n["Monthly Plan Fee"]),a("total_monthly_payment",n["Total Monthly Payment"]),a("device_principal",n["Installment Principal"]),a("device_price_input",n["Selling Price"]),a("optional_discount_ratio",n["Dealer Subsidy high"]),a("margin",n.Margin),a("margin_amount",n["Margin Amount"]),a("contract_months","24"),a("plan_required_months","24"),a("plan_effective_monthly_payment",n["Monthly Plan Fee"]),a("name",s.name),a("phone",s.phone),a("email",s.email||""),a("message",s.message||""),a("region",s.region),a("city",s.city),a("consent","동의함"),console.log("폼 데이터 채우기 완료"),setTimeout((()=>{l();try{t.submit();let a=`\n                    <div style="text-align: center; padding: 20px;">\n                        <h2 style="color: #48bb78;">✅ 구매 신청이 완료되었습니다!</h2>\n                        <p style="margin: 15px 0;">\n                            ${e.userData.name}님, ${e.selectedPhone.Model} 구매 신청이 정상적으로 접수되었습니다.\n                        </p>\n                        <p style="color: #718096;">\n                            담당자가 곧 ${e.userData.phone}로 연락드릴 예정입니다.<br>\n                            감사합니다! 😊\n                        </p>\n                    </div>\n                `;i.addBotMessage(a,10,!0),setTimeout((()=>{i.addBotMessage("다른 도움이 필요하신가요?"),i.showButtons(["처음으로","종료"],(t=>{"처음으로"===t?(e.userData={priceRange:null,carrier:null,brand:null,activationType:null,name:"",phone:"",region:"",city:"",consent:!1},e.filteredData=[...e.phoneData],e.selectedPhone=null,d.start()):i.addBotMessage("노피 챗봇을 이용해주셔서 감사합니다. 좋은 하루 되세요! 👋")}),!1)}),1500)}catch(e){console.error("폼 제출 오류:",e),i.addBotMessage("죄송합니다. 제출 중 오류가 발생했습니다. 다시 시도해주세요.")}}),1e3)},showLatestPhones(){e.currentStep="latest";const t=e.phoneData.sort(((e,t)=>new Date(t.Date)-new Date(e.Date))).slice(0,5);i.addBotMessage("최신 등록된 스마트폰입니다:"),setTimeout((()=>{const e=u(t);i.addBotMessage(e,10,!0),setTimeout((()=>{i.showButtons(["스마트폰 추천받기","처음으로"],(e=>{"스마트폰 추천받기"===e?d.askPriceRange():d.start()}))}),500)}),500)},showAllPhones(){e.currentStep="all",document.getElementById("filters").style.display="block",i.addBotMessage(`총 ${e.phoneData.length}개의 스마트폰을 찾았습니다.`),setTimeout((()=>{const t=u(e.phoneData.slice(0,5));i.addBotMessage(t,10,!0),e.phoneData.length>5&&setTimeout((()=>{i.showButtons([`더 보기 (${e.phoneData.length-5}개)`,"스마트폰 추천받기","처음으로"],(t=>{t.includes("더 보기")?(e.filteredData=[...e.phoneData],d.showMorePhones()):"스마트폰 추천받기"===t?(document.getElementById("filters").style.display="none",d.askPriceRange()):(document.getElementById("filters").style.display="none",d.start())}))}),500)}),500)},goBack(){const t=["initial","priceRange","carrier","activationType","brand","phoneList"],a=t.indexOf(e.currentStep);if(a>0){e.currentStep=t[a-1];const n=document.querySelectorAll(".message.user");switch(n.length>0&&n[n.length-1].remove(),e.currentStep){case"initial":d.start();break;case"priceRange":e.filteredData=[...e.phoneData],d.askPriceRange();break;case"carrier":e.userData.priceRange&&o.filterByPriceRange(e.userData.priceRange.min,e.userData.priceRange.max),d.askCarrier();break;case"activationType":e.userData.carrier&&o.filterByCarrier(e.userData.carrier),d.askActivationType();break;case"brand":e.userData.activationType&&o.filterByActivationType(e.userData.activationType),d.askBrand()}}}};function u(t){let a="";return t.forEach(((t,n)=>{const s=e.phoneData.indexOf(t);a+=`\n            <div class="phone-card" onclick="chatFlow.showPhoneDetail(${s})" style="cursor: pointer;">\n                <div class="phone-card-header">\n                    <span class="phone-model">${t.Model}</span>\n                    <span class="carrier-badge ${t.Carrier}">${t.Carrier}</span>\n                </div>\n                <div class="phone-details">\n                    <div>📱 ${t.Storage}</div>\n                    <div>📋 ${t.Plan}요금제</div>\n                    <div>🏪 ${t.Dealer}</div>\n                    <div>📅 ${t["Activation Type"]}</div>\n                </div>\n                <div class="price-info">\n                    <div>정가: ${h(t["Retail Price"])}원</div>\n                    <div>공시지원금: ${h(t["Official Subsidy"])}원</div>\n                    <div>추가지원금: ${h(t["Dealer Subsidy"])}원</div>\n                    <div class="monthly-payment">월 ${h(t["Total Monthly Payment"])}원</div>\n                </div>\n            </div>\n        `})),a}function h(e){return t(e)}function p(t,a){const n=document.querySelectorAll(".filter-option");let s=null;n.forEach((e=>{e.textContent===a&&(s=e)})),s&&(n.forEach((e=>{e!==s&&e.parentElement===s.parentElement&&e.classList.remove("active")})),s.classList.toggle("active"),s.classList.contains("active")?e.activeFilters[t]=a:e.activeFilters[t]=null),e.filteredData=e.phoneData.filter((t=>{let a=!0;if(e.activeFilters.carrier&&t.Carrier!==e.activeFilters.carrier&&(a=!1),e.activeFilters.brand&&t.Brand!==e.activeFilters.brand&&(a=!1),e.activeFilters.activationType&&t["Activation Type"]!==e.activeFilters.activationType&&(a=!1),e.activeFilters.price){const n=t["Total Monthly Payment"],[s,o]=e.activeFilters.price.split("-"),i=parseInt(s),r=parseInt(o);(n<i||n>r)&&(a=!1)}return a})),function(){if(i.removeCurrentInput(),0===e.filteredData.length)return void i.addBotMessage("선택하신 조건에 맞는 스마트폰이 없습니다. 다른 조건으로 검색해보세요.");let t=`필터링 결과: ${e.filteredData.length}개의 스마트폰을 찾았습니다.<br><br>`;t+=u(e.filteredData.slice(0,5)),e.filteredData.length>5&&(t+='<br><button class="quick-action-btn" onclick="chatFlow.showMorePhones()">더 보기</button>'),i.addBotMessage(t,10,!0)}()}document.addEventListener("DOMContentLoaded",(function(){const t=document.getElementById("chatMessages");t?(t.innerHTML="",o.loadAllData(),window.NofeeChatbot.state=e,window.NofeeChatbot.dataManager=o):console.error("chatMessages 컨테이너를 찾을 수 없습니다.")})),window.NofeeChatbot.chatFlow=d,window.NofeeChatbot.toggleFilter=p,window.NofeeChatbot.formatPrice=h,window.NofeeChatbot.createPhoneListHTML=u,window.NofeeChatbot.showTypingIndicator=r,window.NofeeChatbot.hideTypingIndicator=l,window.NofeeChatbot.dataManager=o,window.chatFlow=d,window.toggleFilter=p}();        // 디버깅 도구
         window.NofeeChatbotDebug = {
+            checkStatus: function() {
+                console.log('=== 챗봇 상태 확인 ===');
+                console.log('1. DOM 요소:');
+                console.log('   - chatMessages:', !!document.getElementById('chatMessages'));
+                console.log('   - 폼:', document.querySelectorAll('form').length + '개');
+                console.log('2. 데이터:');
+                console.log('   - 상품:', window.NofeeChatbot?.state?.phoneData?.length || 0);
+                console.log('   - 현재 단계:', window.NofeeChatbot?.state?.currentStep);
+                console.log('3. Webflow:');
+                console.log('   - Webflow 객체:', !!window.Webflow);
+                console.log('   - jQuery:', !!window.jQuery);
+            },
+
+            forceInit: function() {
+                console.log('강제 초기화 실행...');
+                initializeNofeeChat();
+            },
+
+            testSubmit: function() {
+                console.log('폼 제출 테스트...');
+                const testData = {
+                    name: '테스트',
+                    phone: '01012345678',
+                    model_name: 'TEST-MODEL'
+                };
+
+                Object.entries(testData).forEach(([key, value]) => {
+                    const field = document.getElementById(key);
+                    if (field) field.value = value;
+                });
+
+                submitWebflowForm();
+            },
+
             checkForm: function() {
                 const forms = document.querySelectorAll('form');
                 console.log('\n=== 📋 폼 체크 ===');
@@ -730,7 +824,7 @@
                     console.log(`- 입력 필드: ${inputs.length}개`);
                 });
             },
-            
+
             checkData: function() {
                 console.log('\n=== 📊 데이터 체크 ===');
                 if (window.NofeeChatbot && window.NofeeChatbot.state) {
@@ -743,18 +837,22 @@
                 }
             }
         };
-        
-        // 전역 에러 핸들러
+
         window.addEventListener('error', function(e) {
-            if (e.filename && e.filename.includes('nofee_chat')) {
-                console.error('🚨 챗봇 에러:', e.message);
+            if (e.filename && e.filename.includes('nofee')) {
+                console.error('챗봇 에러:', e.message);
+                setTimeout(() => {
+                    window.NofeeChatbotDebug?.forceInit();
+                }, 1000);
             }
         });
-        
-        
+
         console.log('\n📚 디버깅 명령어:');
-        console.log('- NofeeChatbotDebug.checkForm() : 폼 확인');
-        console.log('- NofeeChatbotDebug.checkData() : 데이터 확인');
+        console.log('- NofeeChatbotDebug.checkStatus() : 상태 확인');
+        console.log('- NofeeChatbotDebug.forceInit()   : 강제 초기화');
+        console.log('- NofeeChatbotDebug.testSubmit()  : 폼 제출 테스트');
+        console.log('- NofeeChatbotDebug.checkForm()   : 폼 확인');
+        console.log('- NofeeChatbotDebug.checkData()   : 데이터 확인');
     })();
     </script>
 </div>
