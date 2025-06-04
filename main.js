@@ -1,15 +1,20 @@
+(function() {
+    'use strict';
+
+    window.NofeeChatbot = window.NofeeChatbot || {};
+
 /**
  * 노피 스마트폰 챗봇 - Main JavaScript
  * 
  * GitHub 연동 가이드:
  * 1. 이 파일을 GitHub 저장소의 main.js로 업로드
- * 2. 상품 데이터를 item 파일로 업로드 (JSON 배열 형식)
+ * 2. 상품 데이터를 item.json 파일로 업로드 (JSON 배열 형식)
  * 3. 지역 데이터를 regions.json 파일로 업로드
  * 4. GitHub Pages를 활성화하거나 jsdelivr CDN 사용
  * 
  * 데이터 URL:
- * - 상품: https://raw.githubusercontent.com/Jacob-PO/nofee_chat/main/item
- * - 지역: https://raw.githubusercontent.com/Jacob-PO/nofee_chat/main/regions.json
+ * - 상품: https://cdn.jsdelivr.net/gh/Jacob-PO/nofee_chat@main/item.json
+ * - 지역: https://cdn.jsdelivr.net/gh/Jacob-PO/nofee_chat@main/regions.json
  */
 
 // 🎯 전역 상태 관리
@@ -89,13 +94,15 @@ const dataManager = {
             showTypingIndicator();
             
             // 상품 데이터와 지역 데이터를 동시에 로드
+            const baseUrl = 'https://cdn.jsdelivr.net/gh/Jacob-PO/nofee_chat@main/';
+
             const [phoneResponse, regionResponse] = await Promise.all([
-                fetch('https://raw.githubusercontent.com/Jacob-PO/nofee_chat/main/item'),
-                fetch('https://raw.githubusercontent.com/Jacob-PO/nofee_chat/main/regions.json')
+                fetch(baseUrl + 'item.json'),
+                fetch(baseUrl + 'regions.json')
             ]);
-            
+
             if (!phoneResponse.ok || !regionResponse.ok) {
-                throw new Error('데이터를 불러올 수 없습니다.');
+                throw new Error(`HTTP error! status: ${phoneResponse.status}`);
             }
             
             state.phoneData = await phoneResponse.json();
@@ -113,9 +120,9 @@ const dataManager = {
             }, 500);
             
         } catch (error) {
-            console.error('Error loading data:', error);
+            console.error('데이터 로드 실패:', error);
             hideTypingIndicator();
-            chatUI.addBotMessage('죄송합니다. 데이터를 불러오는 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.');
+            chatUI.addBotMessage('데이터를 불러오는데 실패했습니다. 새로고침해주세요.');
         }
     },
     
@@ -726,60 +733,36 @@ const chatFlow = {
     
     // 구매 신청 제출
     submitPurchase() {
-        // 실제로는 서버로 데이터 전송
-        const purchaseData = {
-            phone: state.selectedPhone,
-            customer: state.userData,
-            timestamp: new Date().toISOString()
+        const webflowForm = document.querySelector('form[data-name="Chat Form"]') ||
+                            document.querySelector('form[name="chat"]');
+
+        if (!webflowForm) {
+            console.error('Webflow form을 찾을 수 없습니다');
+            return;
+        }
+
+        const fillFormData = (fieldName, value) => {
+            const field = webflowForm.querySelector(`[name="${fieldName}"]`);
+            if (field) {
+                field.value = value || '';
+            } else {
+                console.warn(`필드를 찾을 수 없음: ${fieldName}`);
+            }
         };
-        
-        console.log('구매 신청 데이터:', purchaseData);
-        
-        showTypingIndicator();
-        
-        // 실제 구현에서는 서버 API 호출
-        setTimeout(() => {
-            hideTypingIndicator();
-            
-            let successMessage = `
-                <div style="text-align: center; padding: 20px;">
-                    <h2 style="color: #48bb78;">✅ 구매 신청이 완료되었습니다!</h2>
-                    <p style="margin: 15px 0;">
-                        ${state.userData.name}님, ${state.selectedPhone.Model} 구매 신청이 정상적으로 접수되었습니다.
-                    </p>
-                    <p style="color: #718096;">
-                        담당자가 곧 ${state.userData.phone}로 연락드릴 예정입니다.<br>
-                        감사합니다! 😊
-                    </p>
-                </div>
-            `;
-            
-            chatUI.addBotMessage(successMessage, 10, true);
-            
-            setTimeout(() => {
-                chatUI.addBotMessage('다른 도움이 필요하신가요?');
-                chatUI.showButtons(['처음으로', '종료'], (choice) => {
-                    if (choice === '처음으로') {
-                        // 상태 초기화
-                        state.userData = {
-                            priceRange: null,
-                            carrier: null,
-                            brand: null,
-                            activationType: null,
-                            name: '',
-                            phone: '',
-                            email: '',
-                            message: ''
-                        };
-                        state.filteredData = [...state.phoneData];
-                        state.selectedPhone = null;
-                        chatFlow.start();
-                    } else {
-                        chatUI.addBotMessage('노피 챗봇을 이용해주셔서 감사합니다. 좋은 하루 되세요! 👋');
-                    }
-                }, false);
-            }, 1500);
-        }, 2000);
+
+        fillFormData('model_name', state.selectedPhone.Model);
+        fillFormData('brand', state.selectedPhone.Brand);
+        fillFormData('price', state.selectedPhone['Total Monthly Payment']);
+        fillFormData('customer_name', state.userData.name);
+        fillFormData('customer_phone', state.userData.phone);
+        fillFormData('region', state.userData.region);
+        fillFormData('city', state.userData.city);
+
+        const submitEvent = new Event('submit', {
+            bubbles: true,
+            cancelable: true
+        });
+        webflowForm.dispatchEvent(submitEvent);
     },
     
     // 최신 폰 표시
@@ -1059,5 +1042,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // 전역 함수로 노출 (HTML에서 호출 가능하도록)
-window.chatFlow = chatFlow;
-window.toggleFilter = toggleFilter;
+window.NofeeChatbot.chatFlow = chatFlow;
+window.NofeeChatbot.toggleFilter = toggleFilter;
+})();
