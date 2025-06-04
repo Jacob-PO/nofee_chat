@@ -193,24 +193,47 @@
             }
         }
 
-        // 스크립트 로드
-        function loadNofeeScript() {
-            function appendScript(src, callback) {
-                const s = document.createElement('script');
-                s.src = src;
-                s.onload = callback;
-                s.onerror = callback;
-                document.body.appendChild(s);
-            }
+        /* ========= 1. 경로 설정 ========= */
+        const SCRIPT_CANDIDATES = [
+            // ① GitHub CDN – jsDelivr
+            'https://cdn.jsdelivr.net/gh/Jacob-PO/nofee_chat@main/main.js',
+            // ② gh-pages (or Webflow Assets)
+            'https://jacob-po.github.io/nofee_chat/main.js',
+            // ③ 최후의 폴백(동일 도메인 Assets)
+            '/main.js'
+        ];
 
-            appendScript('https://cdn.jsdelivr.net/gh/Jacob-PO/nofee_chat@main/main.js?v=' + Date.now(), function() {
-                if (window.NofeeAI && typeof window.NofeeAI.init === 'function') {
-                    initNofee();
-                } else {
-                    console.warn('원격 스크립트 로드 실패, 로컬 파일 시도');
-                    appendScript('/main.js?v=' + Date.now(), initNofee);
-                }
+        /* ========= 2. 유틸 ========= */
+        function appendScript(src) {
+            return new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                s.src = `${src}?v=${Date.now()}`;
+                s.async = true;
+                s.onload = () => resolve(src);
+                s.onerror = () => reject(new Error(`❌ ${src} 로드 실패`));
+                document.body.appendChild(s);
             });
+        }
+
+        /* ========= 3. 메인 로더 ========= */
+        function loadNofeeScript() {
+            // 여러 경로 중 ‘첫 성공’을 기다립니다
+            Promise.any(SCRIPT_CANDIDATES.map(appendScript))
+                .then((okSrc) => {
+                    console.log(`✅ main.js 로드 성공 →`, okSrc);
+                    if (window.NofeeAI?.init) {
+                        window.NofeeAI.init();
+                    } else {
+                        console.error('⚠️ NofeeAI 객체를 찾을 수 없습니다');
+                    }
+                })
+                .catch((err) => {
+                    // 전부 실패
+                    console.error('🚨 main.js를 불러올 수 없습니다:', err);
+                    document.getElementById('nofeeLoading').innerHTML =
+                        `<p>초기화에 실패했습니다.</p>
+                         <button onclick="location.reload()" style="margin-top:10px;padding:8px 16px;background:#5C5CFF;color:#fff;border-radius:20px;">새로고침</button>`;
+                });
         }
         
         // 즉시 실행
