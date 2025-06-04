@@ -1,37 +1,37 @@
-/* 노피 AI 챗봇 스타일 - main.css */
+/* 노피 AI 챗봇 스타일 - main.css (라이트 테마) */
 
 /* ===== 변수 정의 ===== */
 :root {
     /* 색상 */
-    --nofee-primary: #6366f1;
-    --nofee-primary-light: #818cf8;
-    --nofee-primary-dark: #4f46e5;
-    --nofee-accent: #a78bfa;
+    --nofee-primary: #5C5CFF;
+    --nofee-primary-light: #7B7BFF;
+    --nofee-primary-dark: #4040FF;
+    --nofee-accent: #4ECDC4;
     --nofee-success: #10b981;
     --nofee-warning: #f59e0b;
     --nofee-error: #ef4444;
     
     /* 배경 */
-    --nofee-bg-primary: #0a0a0a;
-    --nofee-bg-secondary: #111111;
-    --nofee-bg-tertiary: #1a1a1a;
-    --nofee-bg-elevated: rgba(255, 255, 255, 0.05);
-    --nofee-bg-overlay: rgba(0, 0, 0, 0.8);
+    --nofee-bg-primary: #ffffff;
+    --nofee-bg-secondary: #f8f9fa;
+    --nofee-bg-tertiary: #f0f2f5;
+    --nofee-bg-elevated: #ffffff;
+    --nofee-bg-overlay: rgba(0, 0, 0, 0.5);
     
     /* 텍스트 */
-    --nofee-text-primary: #ffffff;
-    --nofee-text-secondary: #a1a1aa;
-    --nofee-text-tertiary: #71717a;
+    --nofee-text-primary: #1a1a1a;
+    --nofee-text-secondary: #6b7280;
+    --nofee-text-tertiary: #9ca3af;
     
     /* 테두리 */
-    --nofee-border: rgba(255, 255, 255, 0.1);
-    --nofee-border-light: rgba(255, 255, 255, 0.05);
+    --nofee-border: #e5e7eb;
+    --nofee-border-light: #f3f4f6;
     
     /* 그림자 */
-    --nofee-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-    --nofee-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
-    --nofee-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
-    --nofee-shadow-glow: 0 0 20px rgba(99, 102, 241, 0.4);
+    --nofee-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --nofee-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+    --nofee-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+    --nofee-shadow-glow: 0 0 20px rgba(92, 92, 255, 0.3);
     
     /* 애니메이션 */
     --nofee-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -39,6 +39,12 @@
 }
 
 /* ===== 기본 스타일 ===== */
+#nofee-ai-wrapper {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
 #nofee-ai-wrapper * {
     margin: 0;
     padding: 0;
@@ -46,27 +52,31 @@
 }
 
 .nofee-app {
-    position: fixed;
-    inset: 0;
+    width: 100%;
+    height: 800px;
     background: var(--nofee-bg-primary);
     color: var(--nofee-text-primary);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     font-size: 16px;
     line-height: 1.5;
     overflow: hidden;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    position: relative;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
 
 /* ===== 로딩 화면 ===== */
 .nofee-loading-screen {
-    position: fixed;
+    position: absolute;
     inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     background: var(--nofee-bg-primary);
     z-index: 9999;
+    border-radius: 20px;
 }
 
 .nofee-loading-content {
@@ -93,7 +103,7 @@
     inset: -20px;
     border-radius: 50%;
     background: radial-gradient(circle, var(--nofee-primary) 0%, transparent 70%);
-    opacity: 0.5;
+    opacity: 0.3;
     animation: nofee-pulse 2s ease-in-out infinite;
 }
 
@@ -134,45 +144,48 @@
     flex-direction: column;
     height: 100%;
     position: relative;
+    border-radius: 20px;
+    overflow: hidden;
 }
 
 /* 배경 효과 */
 .nofee-bg-effects {
-    position: fixed;
+    position: absolute;
     inset: 0;
     pointer-events: none;
     overflow: hidden;
+    opacity: 0.3;
 }
 
 .nofee-gradient-orb {
     position: absolute;
     border-radius: 50%;
-    filter: blur(80px);
-    opacity: 0.3;
+    filter: blur(60px);
+    opacity: 0.4;
 }
 
 .nofee-orb-1 {
-    width: 400px;
-    height: 400px;
+    width: 300px;
+    height: 300px;
     background: var(--nofee-primary);
-    top: -200px;
-    right: -200px;
+    top: -150px;
+    right: -150px;
     animation: nofee-float-1 20s ease-in-out infinite;
 }
 
 .nofee-orb-2 {
-    width: 300px;
-    height: 300px;
+    width: 250px;
+    height: 250px;
     background: var(--nofee-accent);
-    bottom: -150px;
-    left: -150px;
+    bottom: -125px;
+    left: -125px;
     animation: nofee-float-2 25s ease-in-out infinite;
 }
 
 .nofee-orb-3 {
-    width: 250px;
-    height: 250px;
-    background: var(--nofee-primary-light);
+    width: 200px;
+    height: 200px;
+    background: linear-gradient(135deg, var(--nofee-primary), var(--nofee-accent));
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
@@ -183,7 +196,7 @@
 .nofee-header {
     position: relative;
     z-index: 10;
-    background: rgba(10, 10, 10, 0.8);
+    background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--nofee-border);
@@ -194,8 +207,6 @@
     align-items: center;
     justify-content: space-between;
     padding: 1rem 1.5rem;
-    max-width: 800px;
-    margin: 0 auto;
 }
 
 .nofee-brand {
@@ -218,6 +229,7 @@
 .nofee-brand-name {
     font-size: 1.125rem;
     font-weight: 600;
+    color: var(--nofee-text-primary);
 }
 
 .nofee-icon-btn {
@@ -226,7 +238,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--nofee-bg-elevated);
+    background: var(--nofee-bg-secondary);
     border: 1px solid var(--nofee-border);
     border-radius: 12px;
     color: var(--nofee-text-primary);
@@ -235,7 +247,7 @@
 }
 
 .nofee-icon-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--nofee-bg-tertiary);
     transform: scale(1.05);
 }
 
@@ -279,7 +291,7 @@
     position: absolute;
     inset: -20px;
     background: radial-gradient(circle, var(--nofee-primary) 0%, transparent 70%);
-    opacity: 0.5;
+    opacity: 0.3;
     border-radius: 50%;
     animation: nofee-pulse 3s ease-in-out infinite;
 }
@@ -294,17 +306,14 @@
     align-items: center;
     justify-content: center;
     color: white;
-    box-shadow: var(--nofee-shadow-glow);
+    box-shadow: var(--nofee-shadow-lg);
 }
 
 .nofee-welcome-title {
     font-size: 2rem;
     font-weight: 700;
     margin-bottom: 0.5rem;
-    background: linear-gradient(135deg, var(--nofee-text-primary), var(--nofee-text-secondary));
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: var(--nofee-text-primary);
 }
 
 .nofee-welcome-desc {
@@ -320,18 +329,17 @@
 }
 
 .nofee-feature-card {
-    background: var(--nofee-bg-elevated);
+    background: var(--nofee-bg-secondary);
     border: 1px solid var(--nofee-border);
     border-radius: 16px;
     padding: 1.5rem 1rem;
     transition: var(--nofee-transition);
-    backdrop-filter: blur(10px);
 }
 
 .nofee-feature-card:hover {
     transform: translateY(-4px);
-    background: rgba(255, 255, 255, 0.08);
     box-shadow: var(--nofee-shadow-lg);
+    border-color: var(--nofee-primary);
 }
 
 .nofee-feature-icon {
@@ -342,8 +350,6 @@
 /* 메시지 영역 */
 .nofee-messages {
     padding: 2rem 1rem;
-    max-width: 800px;
-    margin: 0 auto;
 }
 
 /* AI 메시지 */
@@ -371,14 +377,13 @@
 }
 
 .nofee-message-bubble {
-    background: var(--nofee-bg-elevated);
+    background: var(--nofee-bg-secondary);
     border: 1px solid var(--nofee-border);
     border-radius: 20px;
     border-top-left-radius: 4px;
     padding: 1rem 1.25rem;
     display: inline-block;
     max-width: 100%;
-    backdrop-filter: blur(10px);
     white-space: pre-wrap;
     line-height: 1.6;
 }
@@ -392,7 +397,7 @@
 }
 
 .nofee-message-user .nofee-message-bubble {
-    background: linear-gradient(135deg, var(--nofee-primary), var(--nofee-accent));
+    background: var(--nofee-primary);
     border: none;
     border-top-right-radius: 4px;
     color: white;
@@ -410,21 +415,19 @@
 .nofee-option-btn {
     padding: 0.75rem 1.5rem;
     background: var(--nofee-bg-elevated);
-    border: 1px solid var(--nofee-border);
+    border: 2px solid var(--nofee-primary);
     border-radius: 24px;
-    color: var(--nofee-text-primary);
+    color: var(--nofee-primary);
     font-size: 0.9375rem;
     font-weight: 500;
     cursor: pointer;
     transition: var(--nofee-transition);
-    backdrop-filter: blur(10px);
 }
 
 .nofee-option-btn:hover {
     background: var(--nofee-primary);
-    border-color: var(--nofee-primary);
+    color: white;
     transform: scale(1.05);
-    box-shadow: var(--nofee-shadow-glow);
 }
 
 /* 입력 필드 */
@@ -439,7 +442,7 @@
     flex: 1;
     padding: 0.875rem 1.25rem;
     background: var(--nofee-bg-elevated);
-    border: 1px solid var(--nofee-border);
+    border: 2px solid var(--nofee-border);
     border-radius: 24px;
     color: var(--nofee-text-primary);
     font-size: 1rem;
@@ -449,12 +452,12 @@
 .nofee-input:focus {
     outline: none;
     border-color: var(--nofee-primary);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    box-shadow: 0 0 0 3px rgba(92, 92, 255, 0.1);
 }
 
 .nofee-input-btn {
     padding: 0.875rem 1.5rem;
-    background: linear-gradient(135deg, var(--nofee-primary), var(--nofee-accent));
+    background: var(--nofee-primary);
     border: none;
     border-radius: 24px;
     color: white;
@@ -464,8 +467,8 @@
 }
 
 .nofee-input-btn:hover {
+    background: var(--nofee-primary-dark);
     transform: scale(1.05);
-    box-shadow: var(--nofee-shadow-glow);
 }
 
 /* 선택 필드 */
@@ -473,7 +476,7 @@
     width: 100%;
     padding: 0.875rem 1.25rem;
     background: var(--nofee-bg-elevated);
-    border: 1px solid var(--nofee-border);
+    border: 2px solid var(--nofee-border);
     border-radius: 16px;
     color: var(--nofee-text-primary);
     font-size: 1rem;
@@ -482,16 +485,20 @@
     margin: 1rem 0;
 }
 
+.nofee-select:focus {
+    outline: none;
+    border-color: var(--nofee-primary);
+}
+
 /* 상품 카드 */
 .nofee-product-card {
     background: var(--nofee-bg-elevated);
-    border: 1px solid var(--nofee-border);
+    border: 2px solid var(--nofee-border);
     border-radius: 20px;
     padding: 1.5rem;
     margin: 1rem 0;
     cursor: pointer;
     transition: var(--nofee-transition);
-    backdrop-filter: blur(10px);
 }
 
 .nofee-product-card:hover {
@@ -504,6 +511,7 @@
     font-size: 1.125rem;
     font-weight: 600;
     margin-bottom: 0.5rem;
+    color: var(--nofee-text-primary);
 }
 
 .nofee-product-details {
@@ -515,10 +523,7 @@
 .nofee-product-price {
     font-size: 1.5rem;
     font-weight: 700;
-    background: linear-gradient(135deg, var(--nofee-primary), var(--nofee-accent));
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: var(--nofee-primary);
 }
 
 .nofee-product-discount {
@@ -552,7 +557,7 @@
     display: flex;
     gap: 4px;
     padding: 0.5rem 1rem;
-    background: var(--nofee-bg-elevated);
+    background: var(--nofee-bg-secondary);
     border-radius: 20px;
 }
 
@@ -574,11 +579,11 @@
 
 /* ===== 하단 액션 바 ===== */
 .nofee-footer {
-    position: fixed;
+    position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
-    background: rgba(10, 10, 10, 0.9);
+    background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-top: 1px solid var(--nofee-border);
@@ -589,8 +594,6 @@
     display: flex;
     gap: 1rem;
     padding: 1rem 1.5rem;
-    max-width: 800px;
-    margin: 0 auto;
 }
 
 .nofee-quick-btn {
@@ -600,7 +603,7 @@
     align-items: center;
     gap: 0.25rem;
     padding: 0.75rem;
-    background: var(--nofee-bg-elevated);
+    background: var(--nofee-bg-secondary);
     border: 1px solid var(--nofee-border);
     border-radius: 16px;
     color: var(--nofee-text-secondary);
@@ -610,24 +613,25 @@
 }
 
 .nofee-quick-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--nofee-bg-tertiary);
     color: var(--nofee-text-primary);
+    transform: translateY(-2px);
 }
 
 .nofee-quick-primary {
-    background: linear-gradient(135deg, var(--nofee-primary), var(--nofee-accent));
+    background: var(--nofee-primary);
     border: none;
     color: white;
 }
 
 .nofee-quick-primary:hover {
-    transform: scale(1.05);
-    box-shadow: var(--nofee-shadow-glow);
+    background: var(--nofee-primary-dark);
+    transform: translateY(-2px);
 }
 
 /* ===== 메뉴 오버레이 ===== */
 .nofee-menu-overlay {
-    position: fixed;
+    position: absolute;
     inset: 0;
     background: var(--nofee-bg-overlay);
     backdrop-filter: blur(10px);
@@ -636,14 +640,13 @@
     align-items: flex-end;
     z-index: 100;
     animation: nofee-fade-in 0.3s ease-out;
+    border-radius: 20px;
 }
 
 .nofee-menu-content {
     width: 100%;
-    max-width: 500px;
-    margin: 0 auto;
-    background: var(--nofee-bg-secondary);
-    border-radius: 24px 24px 0 0;
+    background: var(--nofee-bg-primary);
+    border-radius: 24px 24px 20px 20px;
     padding: 2rem;
     animation: nofee-slide-up 0.3s ease-out;
 }
@@ -658,6 +661,7 @@
 .nofee-menu-header h2 {
     font-size: 1.5rem;
     font-weight: 600;
+    color: var(--nofee-text-primary);
 }
 
 .nofee-menu-nav {
@@ -671,7 +675,7 @@
     align-items: center;
     gap: 1rem;
     padding: 1rem;
-    background: var(--nofee-bg-elevated);
+    background: var(--nofee-bg-secondary);
     border-radius: 16px;
     color: var(--nofee-text-primary);
     text-decoration: none;
@@ -679,18 +683,17 @@
 }
 
 .nofee-menu-item:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--nofee-bg-tertiary);
     transform: translateX(4px);
 }
 
 /* ===== 동의 정보 ===== */
 .nofee-consent-box {
-    background: var(--nofee-bg-elevated);
+    background: var(--nofee-bg-secondary);
     border: 1px solid var(--nofee-border);
     border-radius: 16px;
     padding: 1.5rem;
     margin: 1rem 0;
-    backdrop-filter: blur(10px);
 }
 
 .nofee-consent-box a {
@@ -719,8 +722,8 @@
 }
 
 @keyframes nofee-pulse {
-    0%, 100% { opacity: 0.5; transform: scale(1); }
-    50% { opacity: 0.8; transform: scale(1.1); }
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.1); }
 }
 
 @keyframes nofee-loading {
@@ -731,15 +734,15 @@
 
 @keyframes nofee-float-1 {
     0%, 100% { transform: translate(0, 0); }
-    25% { transform: translate(-50px, 30px); }
-    50% { transform: translate(30px, -40px); }
-    75% { transform: translate(-30px, -20px); }
+    25% { transform: translate(-30px, 20px); }
+    50% { transform: translate(20px, -30px); }
+    75% { transform: translate(-20px, -15px); }
 }
 
 @keyframes nofee-float-2 {
     0%, 100% { transform: translate(0, 0); }
-    33% { transform: translate(40px, -30px); }
-    66% { transform: translate(-30px, 40px); }
+    33% { transform: translate(30px, -20px); }
+    66% { transform: translate(-20px, 30px); }
 }
 
 @keyframes nofee-float-3 {
@@ -776,6 +779,15 @@
 
 /* ===== 반응형 ===== */
 @media (max-width: 640px) {
+    #nofee-ai-wrapper {
+        max-width: 100%;
+    }
+    
+    .nofee-app {
+        height: 100vh;
+        border-radius: 0;
+    }
+    
     .nofee-welcome-title {
         font-size: 1.5rem;
     }
@@ -800,7 +812,7 @@
 
 /* ===== 스크롤바 스타일 ===== */
 .nofee-chat-container::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
 }
 
 .nofee-chat-container::-webkit-scrollbar-track {
@@ -808,8 +820,8 @@
 }
 
 .nofee-chat-container::-webkit-scrollbar-thumb {
-    background: var(--nofee-bg-tertiary);
-    border-radius: 4px;
+    background: var(--nofee-border);
+    border-radius: 3px;
 }
 
 .nofee-chat-container::-webkit-scrollbar-thumb:hover {
