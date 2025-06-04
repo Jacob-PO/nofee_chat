@@ -138,9 +138,12 @@
  * GitHub 연동 가이드:
  * 1. 이 파일을 GitHub 저장소의 main.js로 업로드
  * 2. 상품 데이터를 item 파일로 업로드 (JSON 배열 형식)
- * 3. GitHub Pages를 활성화하거나 jsdelivr CDN 사용
+ * 3. 지역 데이터를 regions.json 파일로 업로드
+ * 4. GitHub Pages를 활성화하거나 jsdelivr CDN 사용
  * 
- * 상품 데이터 URL: https://raw.githubusercontent.com/Jacob-PO/nofee_chat/main/item
+ * 데이터 URL:
+ * - 상품: https://raw.githubusercontent.com/Jacob-PO/nofee_chat/main/item
+ * - 지역: https://raw.githubusercontent.com/Jacob-PO/nofee_chat/main/regions.json
  */
 
 // 🎯 전역 상태 관리
@@ -158,14 +161,18 @@ const state = {
         activationType: null,
         name: '',
         phone: '',
-        email: '',
-        message: ''
+        region: '',
+        city: '',
+        consent: false
     },
     
     // 상품 데이터
     phoneData: [],
     filteredData: [],
     selectedPhone: null,
+    
+    // 지역 데이터
+    regionData: [],
     
     // 필터
     activeFilters: {
@@ -191,9 +198,8 @@ const utils = {
         return phoneRegex.test(phone.replace(/-/g, ''));
     },
     
-    validateEmail: (email) => {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
+    validateName: (name) => {
+        return name.length >= 2 && name.length <= 10;
     },
     
     debounce: (func, wait) => {
@@ -211,15 +217,27 @@ const utils = {
 
 // 📊 데이터 관리
 const dataManager = {
-    // GitHub에서 상품 데이터 불러오기
-    async loadPhoneData() {
+    // GitHub에서 데이터 불러오기
+    async loadAllData() {
         try {
             showTypingIndicator();
-            const response = await fetch('https://raw.githubusercontent.com/Jacob-PO/nofee_chat/main/item');
-            if (!response.ok) throw new Error('데이터를 불러올 수 없습니다.');
             
-            state.phoneData = await response.json();
+            // 상품 데이터와 지역 데이터를 동시에 로드
+            const [phoneResponse, regionResponse] = await Promise.all([
+                fetch('https://raw.githubusercontent.com/Jacob-PO/nofee_chat/main/item'),
+                fetch('https://raw.githubusercontent.com/Jacob-PO/nofee_chat/main/regions.json')
+            ]);
+            
+            if (!phoneResponse.ok || !regionResponse.ok) {
+                throw new Error('데이터를 불러올 수 없습니다.');
+            }
+            
+            state.phoneData = await phoneResponse.json();
+            state.regionData = await regionResponse.json();
             state.filteredData = [...state.phoneData];
+            
+            console.log(`상품 데이터 로드 완료: ${state.phoneData.length}개`);
+            console.log(`지역 데이터 로드 완료: ${state.regionData.length}개 시/도`);
             
             hideTypingIndicator();
             
@@ -231,8 +249,19 @@ const dataManager = {
         } catch (error) {
             console.error('Error loading data:', error);
             hideTypingIndicator();
-            addBotMessage('죄송합니다. 데이터를 불러오는 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.');
+            chatUI.addBotMessage('죄송합니다. 데이터를 불러오는 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.');
         }
+    },
+    
+    // 지역 데이터 가져오기
+    getRegions() {
+        return state.regionData.map(region => region.name);
+    },
+    
+    // 특정 지역의 구/군 가져오기
+    getDistricts(regionName) {
+        const region = state.regionData.find(r => r.name === regionName);
+        return region ? region.districts : [];
     },
     
     // 필터링 함수들
@@ -258,16 +287,6 @@ const dataManager = {
     // 고유한 값들 추출
     getUniqueValues(field) {
         return [...new Set(state.filteredData.map(phone => phone[field]))].filter(Boolean);
-    },
-    
-    // 검색 함수
-    searchPhones(query) {
-        const lowerQuery = query.toLowerCase();
-        return state.phoneData.filter(phone => 
-            phone.Model.toLowerCase().includes(lowerQuery) ||
-            phone.Brand.toLowerCase().includes(lowerQuery) ||
-            phone.Carrier.toLowerCase().includes(lowerQuery)
-        );
     }
 };
 
@@ -347,7 +366,7 @@ const chatUI = {
             wrapper.appendChild(btn);
         });
         
-        if (showBack && state.currentStep !== 'greeting') {
+        if (showBack && state.currentStep !== 'greeting' && state.currentStep !== 'initial') {
             const backBtn = document.createElement('button');
             backBtn.className = 'quick-action-btn';
             backBtn.style.background = '#e53e3e';
@@ -363,8 +382,8 @@ const chatUI = {
         scrollToBottom();
     },
     
-    // 입력 필드 표시
-    showInput(type, placeholder = '', showBack = true) {
+    // 텍스트 입력 필드 표시 (이름, 전화번호용)
+    showTextInput(type, placeholder = '', validation = null) {
         const chatMessages = document.getElementById('chatMessages');
         const wrapper = document.createElement('div');
         wrapper.className = 'chat-input';
@@ -372,17 +391,24 @@ const chatUI = {
         
         const input = document.createElement('input');
         input.className = 'chat-input-field';
-        input.type = type === 'email' ? 'email' : 'text';
+        input.type = 'text';
         input.placeholder = placeholder;
         
         if (type === 'phone') {
             input.maxLength = 11;
-            input.pattern = '[0-9]*';
+            input.placeholder = '01012345678';
+            // 숫자만 입력 가능하도록
+            input.addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/[^0-9]/g, '');
+            });
+        } else if (type === 'name') {
+            input.maxLength = 10;
+            input.placeholder = '홍길동';
         }
         
         const btn = document.createElement('button');
         btn.className = 'send-button';
-        btn.innerHTML = '➤';
+        btn.innerHTML = '확인';
         btn.onclick = () => {
             const value = utils.sanitizeInput(input.value);
             
@@ -393,9 +419,9 @@ const chatUI = {
                 return;
             }
             
-            if (type === 'email' && !utils.validateEmail(value)) {
+            if (type === 'name' && !utils.validateName(value)) {
                 input.style.borderColor = '#ff4444';
-                input.placeholder = '올바른 이메일을 입력해주세요';
+                input.placeholder = '2-10자 이내로 입력해주세요';
                 return;
             }
             
@@ -416,19 +442,6 @@ const chatUI = {
         wrapper.appendChild(input);
         wrapper.appendChild(btn);
         
-        if (showBack && state.currentStep !== 'greeting') {
-            const backBtn = document.createElement('button');
-            backBtn.className = 'quick-action-btn';
-            backBtn.style.background = '#e53e3e';
-            backBtn.style.marginLeft = '10px';
-            backBtn.textContent = '← 이전';
-            backBtn.onclick = () => {
-                wrapper.remove();
-                chatFlow.goBack();
-            };
-            wrapper.appendChild(backBtn);
-        }
-        
         chatMessages.appendChild(wrapper);
         scrollToBottom();
         
@@ -440,44 +453,6 @@ const chatUI = {
     removeCurrentInput() {
         const currentInput = document.getElementById('currentInput');
         if (currentInput) currentInput.remove();
-    }
-}
-
-// 메시지 전송 함수 (호환성 유지)
-function sendMessage() {
-    const input = document.getElementById('chatInput');
-    const message = input.value.trim();
-    
-    if (!message) return;
-    
-    chatUI.addUserMessage(message);
-    input.value = '';
-    
-    showTypingIndicator();
-    
-    setTimeout(() => {
-        processMessage(message);
-        hideTypingIndicator();
-    }, 1000);
-}
-
-// 빠른 메시지 전송
-function sendQuickMessage(message) {
-    chatUI.removeCurrentInput();
-    chatUI.addUserMessage(message);
-    
-    showTypingIndicator();
-    
-    setTimeout(() => {
-        processMessage(message);
-        hideTypingIndicator();
-    }, 1000);
-}
-
-// 엔터키 처리
-function handleKeyPress(event) {
-    if (event.key === 'Enter') {
-        sendMessage();
     }
 }
 
@@ -510,15 +485,6 @@ function hideTypingIndicator() {
 function scrollToBottom() {
     const chatMessages = document.getElementById('chatMessages');
     chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-// 호환성을 위한 래퍼 함수들
-function addBotMessage(message, isHTML = false) {
-    chatUI.addBotMessage(message, 10, isHTML);
-}
-
-function addUserMessage(message) {
-    chatUI.addUserMessage(message);
 }
 
 // 🔄 채팅 플로우 관리
@@ -733,7 +699,7 @@ const chatFlow = {
     startPurchase() {
         state.currentStep = 'purchaseName';
         chatUI.addBotMessage('구매 신청을 도와드리겠습니다. 먼저 성함을 입력해주세요.');
-        chatUI.showInput('text', '홍길동');
+        chatUI.showTextInput('name', '홍길동');
     },
     
     // 입력 처리
@@ -743,34 +709,74 @@ const chatFlow = {
                 state.userData.name = value;
                 state.currentStep = 'purchasePhone';
                 chatUI.addBotMessage('연락 가능한 전화번호를 입력해주세요. (- 없이 숫자만)');
-                chatUI.showInput('phone', '01012345678');
+                chatUI.showTextInput('phone', '01012345678');
                 break;
                 
             case 'purchasePhone':
                 state.userData.phone = value;
-                state.currentStep = 'purchaseEmail';
-                chatUI.addBotMessage('이메일 주소를 입력해주세요.');
-                chatUI.showInput('email', 'example@email.com');
+                state.currentStep = 'purchaseRegion';
+                chatFlow.askRegion();
                 break;
-                
-            case 'purchaseEmail':
-                state.userData.email = value;
-                state.currentStep = 'purchaseMessage';
-                chatUI.addBotMessage('추가 요청사항이 있으시면 입력해주세요. (선택사항)');
-                chatUI.showButtons(['없음', '직접 입력'], (choice) => {
-                    if (choice === '없음') {
-                        state.userData.message = '';
+        }
+    },
+    
+    // 지역 선택
+    askRegion() {
+        const regions = dataManager.getRegions();
+        chatUI.addBotMessage('거주하시는 시/도를 선택해주세요.');
+        
+        // 지역이 많으므로 그룹화하여 표시
+        const mainRegions = regions.filter(r => ['서울', '경기', '인천', '부산', '대구', '광주', '대전', '울산', '세종'].includes(r));
+        const otherRegions = regions.filter(r => !mainRegions.includes(r));
+        
+        const allOptions = [...mainRegions, '--- 기타 지역 ---', ...otherRegions];
+        
+        chatUI.showButtons(allOptions, (region) => {
+            if (region === '--- 기타 지역 ---') {
+                return; // 구분선은 무시
+            }
+            state.userData.region = region;
+            state.currentStep = 'purchaseCity';
+            chatFlow.askCity();
+        });
+    },
+    
+    // 구/군 선택
+    askCity() {
+        const districts = dataManager.getDistricts(state.userData.region);
+        
+        if (districts.length === 0) {
+            // 세종시처럼 구/군이 없는 경우
+            state.userData.city = '';
+            chatFlow.confirmPurchase();
+            return;
+        }
+        
+        chatUI.addBotMessage('상세 지역(구/군/시)을 선택해주세요.');
+        
+        // 지역이 많은 경우 15개씩 끊어서 보여주기
+        if (districts.length > 15) {
+            const firstBatch = districts.slice(0, 15);
+            const showMoreOption = `더보기 (${districts.length - 15}개)`;
+            
+            chatUI.showButtons([...firstBatch, showMoreOption], (city) => {
+                if (city === showMoreOption) {
+                    // 나머지 지역 보여주기
+                    chatUI.removeCurrentInput();
+                    chatUI.showButtons(districts.slice(15), (selectedCity) => {
+                        state.userData.city = selectedCity;
                         chatFlow.confirmPurchase();
-                    } else {
-                        chatUI.showInput('text', '요청사항을 입력하세요');
-                    }
-                });
-                break;
-                
-            case 'purchaseMessage':
-                state.userData.message = value;
+                    });
+                } else {
+                    state.userData.city = city;
+                    chatFlow.confirmPurchase();
+                }
+            });
+        } else {
+            chatUI.showButtons(districts, (city) => {
+                state.userData.city = city;
                 chatFlow.confirmPurchase();
-                break;
+            });
         }
     },
     
@@ -791,8 +797,7 @@ const chatFlow = {
                 <h4 style="margin-top: 15px;">👤 고객 정보</h4>
                 <p>이름: ${user.name}</p>
                 <p>연락처: ${user.phone}</p>
-                <p>이메일: ${user.email}</p>
-                ${user.message ? `<p>요청사항: ${user.message}</p>` : ''}
+                <p>지역: ${user.region}${user.city ? ' ' + user.city : ''}</p>
             </div>
         `;
         
@@ -800,11 +805,54 @@ const chatFlow = {
         
         setTimeout(() => {
             chatUI.addBotMessage('위 정보가 맞으신가요?');
-            chatUI.showButtons(['네, 신청합니다', '정보 수정'], (choice) => {
-                if (choice === '네, 신청합니다') {
-                    chatFlow.submitPurchase();
+            chatUI.showButtons(['네, 맞습니다', '정보 수정'], (choice) => {
+                if (choice === '네, 맞습니다') {
+                    chatFlow.askConsent();
                 } else {
                     chatFlow.startPurchase();
+                }
+            });
+        }, 500);
+    },
+    
+    // 개인정보 동의
+    askConsent() {
+        state.currentStep = 'consent';
+        
+        let html = `
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin: 10px 0;">
+                <h4 style="color: #667eea;">개인정보 수집 및 이용 동의</h4>
+                <p style="font-size: 14px; line-height: 1.6;">
+                    노피는 고객님의 개인정보를 중요시하며, 개인정보보호법을 준수합니다.<br><br>
+                    
+                    <strong>수집 항목:</strong> 이름, 연락처, 거주지역<br>
+                    <strong>수집 목적:</strong> 스마트폰 구매 상담 및 안내<br>
+                    <strong>보유 기간:</strong> 상담 완료 후 1년<br><br>
+                    
+                    위 개인정보 수집 및 이용에 동의하십니까?
+                </p>
+            </div>
+        `;
+        
+        chatUI.addBotMessage(html, 10, true);
+        
+        setTimeout(() => {
+            chatUI.showButtons(['동의합니다', '동의하지 않습니다'], (choice) => {
+                if (choice === '동의합니다') {
+                    state.userData.consent = true;
+                    chatFlow.submitPurchase();
+                } else {
+                    chatUI.addBotMessage('개인정보 수집에 동의하지 않으시면 구매 신청을 진행할 수 없습니다.');
+                    setTimeout(() => {
+                        chatUI.addBotMessage('다시 생각해보시겠습니까?');
+                        chatUI.showButtons(['다시 생각해볼게요', '종료하기'], (choice2) => {
+                            if (choice2 === '다시 생각해볼게요') {
+                                chatFlow.askConsent();
+                            } else {
+                                chatUI.addBotMessage('노피 챗봇을 이용해주셔서 감사합니다. 언제든 다시 찾아주세요!');
+                            }
+                        });
+                    }, 1000);
                 }
             });
         }, 500);
@@ -973,128 +1021,6 @@ const chatFlow = {
     }
 };
 
-// 메시지 처리
-function processMessage(message) {
-    const lowerMessage = message.toLowerCase();
-    
-    // 인사말
-    if (lowerMessage.includes('안녕') || lowerMessage.includes('하이') || lowerMessage.includes('hello')) {
-        chatUI.addBotMessage('안녕하세요! 어떤 스마트폰을 찾고 계신가요? 😊');
-        setTimeout(() => {
-            chatUI.showButtons([
-                '스마트폰 추천받기',
-                '최신 스마트폰 보기',
-                '브랜드별 검색',
-                '전체 목록 보기'
-            ], (choice) => {
-                chatUI.removeCurrentInput();
-                switch(choice) {
-                    case '스마트폰 추천받기':
-                        chatFlow.askPriceRange();
-                        break;
-                    case '최신 스마트폰 보기':
-                        chatFlow.showLatestPhones();
-                        break;
-                    case '브랜드별 검색':
-                        chatFlow.askBrand();
-                        break;
-                    case '전체 목록 보기':
-                        chatFlow.showAllPhones();
-                        break;
-                }
-            }, false);
-        }, 500);
-        return;
-    }
-    
-    // 전체 목록
-    if (lowerMessage.includes('전체') || lowerMessage.includes('모든') || lowerMessage.includes('목록')) {
-        chatUI.removeCurrentInput();
-        chatFlow.showAllPhones();
-        return;
-    }
-    
-    // 최신 스마트폰
-    if (lowerMessage.includes('최신') || lowerMessage.includes('신상')) {
-        chatUI.removeCurrentInput();
-        chatFlow.showLatestPhones();
-        return;
-    }
-    
-    // 브랜드 검색
-    if (lowerMessage.includes('삼성') || lowerMessage.includes('갤럭시')) {
-        chatUI.removeCurrentInput();
-        filterByBrand('삼성');
-        return;
-    }
-    
-    if (lowerMessage.includes('애플') || lowerMessage.includes('아이폰')) {
-        chatUI.removeCurrentInput();
-        filterByBrand('애플');
-        return;
-    }
-    
-    // 가격대 검색
-    if (lowerMessage.includes('저렴') || lowerMessage.includes('싸게') || lowerMessage.includes('5만원 이하')) {
-        chatUI.removeCurrentInput();
-        filterByPrice('0-50000');
-        return;
-    }
-    
-    // 통신사 검색
-    if (lowerMessage.includes('sk') || lowerMessage.includes('에스케이')) {
-        chatUI.removeCurrentInput();
-        filterByCarrier('SK');
-        return;
-    }
-    
-    if (lowerMessage.includes('kt') || lowerMessage.includes('케이티')) {
-        chatUI.removeCurrentInput();
-        filterByCarrier('KT');
-        return;
-    }
-    
-    if (lowerMessage.includes('lg') || lowerMessage.includes('엘지')) {
-        chatUI.removeCurrentInput();
-        filterByCarrier('LG');
-        return;
-    }
-    
-    // 도움말
-    if (lowerMessage.includes('도움') || lowerMessage.includes('help')) {
-        chatUI.removeCurrentInput();
-        showHelp();
-        return;
-    }
-    
-    // 처음으로
-    if (lowerMessage.includes('처음') || lowerMessage.includes('시작')) {
-        chatUI.removeCurrentInput();
-        state.filteredData = [...state.phoneData];
-        chatFlow.start();
-        return;
-    }
-    
-    // 검색 기능
-    const searchResults = dataManager.searchPhones(message);
-    if (searchResults.length > 0) {
-        chatUI.removeCurrentInput();
-        state.filteredData = searchResults;
-        chatUI.addBotMessage(`"${message}" 검색 결과 ${searchResults.length}개를 찾았습니다.`);
-        setTimeout(() => {
-            const html = createPhoneListHTML(searchResults.slice(0, 5));
-            chatUI.addBotMessage(html, 10, true);
-        }, 500);
-        return;
-    }
-    
-    // 기본 응답
-    chatUI.addBotMessage('죄송합니다. 이해하지 못했습니다.');
-    setTimeout(() => {
-        showHelp();
-    }, 500);
-}
-
 // 브랜드별 필터
 function filterByBrand(brand) {
     state.filteredData = state.phoneData.filter(phone => phone.Brand === brand);
@@ -1124,40 +1050,6 @@ function filterByCarrier(carrier) {
     }
     
     let html = `${carrier} 통신사 스마트폰 ${state.filteredData.length}개를 찾았습니다:<br><br>`;
-    html += createPhoneListHTML(state.filteredData.slice(0, 5));
-    
-    chatUI.addBotMessage(html, 10, true);
-}
-
-// 가격대별 필터
-function filterByPrice(priceRange) {
-    let min, max;
-    
-    switch(priceRange) {
-        case '0-50000':
-            min = 0; max = 50000;
-            break;
-        case '50000-70000':
-            min = 50000; max = 70000;
-            break;
-        case '70000-100000':
-            min = 70000; max = 100000;
-            break;
-        default:
-            min = 0; max = Infinity;
-    }
-    
-    state.filteredData = state.phoneData.filter(phone => 
-        phone['Total Monthly Payment'] >= min && phone['Total Monthly Payment'] <= max
-    );
-    
-    if (state.filteredData.length === 0) {
-        chatUI.addBotMessage('해당 가격대의 스마트폰을 찾을 수 없습니다.');
-        return;
-    }
-    
-    let priceLabel = priceRange === '0-50000' ? '5만원 이하' : '해당 가격대';
-    let html = `월 납부금액 ${priceLabel} 스마트폰 ${state.filteredData.length}개를 찾았습니다:<br><br>`;
     html += createPhoneListHTML(state.filteredData.slice(0, 5));
     
     chatUI.addBotMessage(html, 10, true);
@@ -1285,45 +1177,6 @@ function showFilteredResults() {
     chatUI.addBotMessage(html, 10, true);
 }
 
-// 도움말 표시
-function showHelp() {
-    const helpMessage = `
-        <h3 style="color: #667eea;">🤔 도움말</h3>
-        <p>다음과 같이 물어보실 수 있습니다:</p>
-        <div style="margin-left: 20px; line-height: 1.8;">
-            <div>📱 "삼성 스마트폰 보여줘"</div>
-            <div>💰 "5만원 이하 요금제"</div>
-            <div>📡 "SK 통신사 폰"</div>
-            <div>🆕 "최신 스마트폰"</div>
-            <div>📋 "전체 목록 보기"</div>
-            <div>🔍 특정 모델명으로 검색</div>
-        </div>
-        <p style="margin-top: 15px;">또는 아래 버튼을 클릭해주세요:</p>
-    `;
-    
-    chatUI.addBotMessage(helpMessage, 10, true);
-    
-    setTimeout(() => {
-        chatUI.showButtons([
-            '스마트폰 추천받기',
-            '최신 스마트폰 보기',
-            '전체 목록 보기'
-        ], (choice) => {
-            switch(choice) {
-                case '스마트폰 추천받기':
-                    chatFlow.askPriceRange();
-                    break;
-                case '최신 스마트폰 보기':
-                    chatFlow.showLatestPhones();
-                    break;
-                case '전체 목록 보기':
-                    chatFlow.showAllPhones();
-                    break;
-            }
-        }, false);
-    }, 500);
-}
-
 // 페이지 로드 시 실행
 document.addEventListener('DOMContentLoaded', function() {
     // 초기 인사말
@@ -1333,7 +1186,7 @@ document.addEventListener('DOMContentLoaded', function() {
         chatMessages.innerHTML = '';
         
         // 데이터 로드
-        dataManager.loadPhoneData();
+        dataManager.loadAllData();
     } else {
         console.error('chatMessages 컨테이너를 찾을 수 없습니다.');
     }
@@ -1342,6 +1195,3 @@ document.addEventListener('DOMContentLoaded', function() {
 // 전역 함수로 노출 (HTML에서 호출 가능하도록)
 window.chatFlow = chatFlow;
 window.toggleFilter = toggleFilter;
-window.sendQuickMessage = sendQuickMessage;
-window.sendMessage = sendMessage;
-window.handleKeyPress = handleKeyPress;
