@@ -711,6 +711,14 @@
     color: #4040FF;
 }
 
+/* 동의 정보 */
+.nofee-consent-info {
+    background: #f8f8f8;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+}
+
 /* 반응형 */
 @media (max-width: 480px) {
     .nofee-chat-container {
