@@ -199,8 +199,8 @@
             'https://cdn.jsdelivr.net/gh/Jacob-PO/nofee_chat@main/main.js',
             // ② gh-pages (or Webflow Assets)
             'https://jacob-po.github.io/nofee_chat/main.js',
-            // ③ 최후의 폴백(동일 도메인 Assets)
-            '/main.js'
+            // ③ 최후의 폴백(절대 경로 Assets)
+            'https://assets-global.website-files.com/<hash>/main.js'
         ];
 
         /* ========= 2. 유틸 ========= */
@@ -211,7 +211,7 @@
                 s.async = true;
                 s.onload = () => resolve(src);
                 s.onerror = () => reject(new Error(`❌ ${src} 로드 실패`));
-                document.body.appendChild(s);
+                document.head.appendChild(s);
             });
         }
 
