@@ -203,12 +203,12 @@
                 document.body.appendChild(s);
             }
 
-            appendScript('https://raw.githubusercontent.com/Jacob-PO/nofee_chat/main/main.js?v=' + Date.now(), function() {
+            appendScript('https://cdn.jsdelivr.net/gh/Jacob-PO/nofee_chat@main/main.js?v=' + Date.now(), function() {
                 if (window.NofeeAI && typeof window.NofeeAI.init === 'function') {
                     initNofee();
                 } else {
                     console.warn('원격 스크립트 로드 실패, 로컬 파일 시도');
-                    appendScript('main.js?v=' + Date.now(), initNofee);
+                    appendScript('/main.js?v=' + Date.now(), initNofee);
                 }
             });
         }
