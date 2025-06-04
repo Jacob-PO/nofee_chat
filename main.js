@@ -745,8 +745,7 @@ const chatFlow = {
         showTypingIndicator();
 
         // Webflow form 찾기
-        const webflowForm = document.querySelector('form[data-name="Chat Form"]') ||
-                            document.querySelector('form[name="chat"]');
+        const webflowForm = document.getElementById('chat-form');
 
         if (!webflowForm) {
             console.error('Webflow form을 찾을 수 없습니다');
@@ -823,7 +822,11 @@ const chatFlow = {
 
             try {
                 // Webflow 폼 제출
-                webflowForm.submit();
+                if (window.submitWebflowForm) {
+                    window.submitWebflowForm();
+                } else {
+                    webflowForm.submit();
+                }
 
                 // 성공 메시지 표시
                 let successMessage = `
