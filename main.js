@@ -1,4 +1,4 @@
-// 노피 AI 챗봇 - main.js
+// 노피 AI 챗봇 - main.js (확장된 AI 추천 로직)
 (function() {
     'use strict';
     
@@ -16,16 +16,19 @@
                 carrier: null,
                 brand: null
             },
-            selectedPhone: null,
-            customerInfo: {
+            userData: {
+                dataUsage: null,      // 데이터 사용량 (high/medium/low)
+                preference: null,     // 사용 패턴 (camera/game/battery)
                 name: '',
                 phone: '',
                 region: '',
                 district: '',
                 consent: false
             },
+            selectedProduct: null,
             sessionId: null,
-            messageHistory: []
+            messageHistory: [],
+            recommendationScore: {}   // 추천 점수 저장
         },
         
         // GitHub CDN URLs
@@ -34,6 +37,25 @@
             BACKUP_URL: 'https://raw.githubusercontent.com/Jacob-PO/nofee_chat/main/',
             TYPING_SPEED: 30,
             AI_THINKING_DELAY: 1000
+        },
+        
+        // 모델명 한글 매핑
+        modelKoMap: {
+            'Samsung Galaxy S25 256GB': '갤럭시 S25 256GB',
+            'Samsung Galaxy S25 Plus 256GB': '갤럭시 S25 플러스 256GB',
+            'Samsung Galaxy S25 Ultra 256GB': '갤럭시 S25 울트라 256GB',
+            'Samsung Galaxy S24 FE': '갤럭시 S24 FE',
+            'Samsung Galaxy Z Flip6 256GB': '갤럭시 Z 플립6 256GB',
+            'Samsung Galaxy Z Fold6 256GB': '갤럭시 Z 폴드6 256GB',
+            'Samsung Galaxy A35 128GB': '갤럭시 A35 128GB',
+            'Samsung Galaxy A16': '갤럭시 A16',
+            'iPhone 16 128GB': '아이폰 16 128GB',
+            'iPhone 16 256GB': '아이폰 16 256GB',
+            'iPhone 16 Pro 128GB': '아이폰 16 Pro 128GB',
+            'iPhone 16 Pro 256GB': '아이폰 16 Pro 256GB',
+            'iPhone 16 Pro Max 256GB': '아이폰 16 Pro Max 256GB',
+            'iPhone 15 128GB': '아이폰 15 128GB',
+            'iPhone 15 Pro 128GB': '아이폰 15 Pro 128GB'
         },
         
         // 초기화
@@ -78,7 +100,8 @@
                     this.fetchWithFallback('regions.json')
                 ]);
                 
-                this.state.phoneData = phoneData || [];
+                // 데이터 변환
+                this.state.phoneData = this.transformProducts(phoneData || []);
                 this.state.regionData = regionData || [];
                 
                 console.log(`휴대폰 데이터: ${this.state.phoneData.length}개`);
@@ -90,6 +113,35 @@
                 this.hideAIThinking();
                 this.addBotMessage('데이터를 불러오는데 실패했습니다. 잠시 후 다시 시도해주세요.');
             }
+        },
+        
+        // 상품 데이터 변환
+        transformProducts: function(rawData) {
+            return rawData.map(item => {
+                const transformed = {
+                    ...item,
+                    model: this.modelKoMap[item.Model] || item.Model,
+                    storage: item.Storage || '128GB',
+                    activation: item['Activation Type'] || '신규',
+                    contract: item['Contract Type'] || '공시',
+                    carrier: item.Carrier || 'SKT',
+                    total: item['Total Monthly Payment'] || 0,
+                    deviceDiscount: item['Monthly Device Fee'] || 0,
+                    planFee: item['Monthly Plan Fee'] || 0,
+                    devicePrice: item['Retail Price'] || 0,
+                    margin: item.Margin || 0,
+                    marginAmount: item['Margin Amount'] || 0,
+                    dealerSubsidy: item['Dealer Subsidy'] || 0,
+                    officialSubsidy: item['Official Subsidy'] || 0
+                };
+                
+                // 추가 계산 필드
+                transformed.planPortion = transformed.planFee / transformed.total;
+                transformed.hasExtraDiscount = transformed.deviceDiscount < 0;
+                transformed.extraDiscountAmount = Math.abs(Math.min(0, transformed.deviceDiscount));
+                
+                return transformed;
+            });
         },
         
         // Fallback 포함 데이터 가져오기
@@ -112,100 +164,115 @@
         
         // 인사 메시지
         showGreeting: async function() {
-            await this.addBotMessage('안녕하세요! 저는 노피 AI 매니저입니다 💙');
+            await this.addBotMessage('안녕하세요! 수수료 NO, 최저가 휴대폰 노피 AI입니다 ✨');
             await this.utils.delay(300);
-            await this.addBotMessage('전국 어디서나 휴대폰 성지 가격으로!\n중고차 매물을 찾듯, 최고의 조건을 찾아드릴게요.');
+            await this.addBotMessage('고객님께 딱 맞는 휴대폰을 찾아드릴게요!\n몇 가지만 여쭤볼게요 😊');
             await this.utils.delay(500);
             
-            this.showInitialOptions();
+            this.askDataUsage();
         },
         
-        // 초기 옵션 표시
-        showInitialOptions: function() {
-            const optionsHTML = `
-                <div class="nofee-message">
-                    <div class="nofee-options-grid">
-                        <div class="nofee-option-card blue" onclick="NofeeAI.startPhoneSelection('self')">
-                            <h4>맞춤 추천 😎</h4>
-                            <p>내 조건에 맞는 휴대폰 찾기</p>
-                            <div class="nofee-option-icon">🎯</div>
-                        </div>
-                        <div class="nofee-option-card green" onclick="NofeeAI.startPhoneSelection('best')">
-                            <h4>베스트 상품 🏆</h4>
-                            <p>지금 가장 인기있는 상품</p>
-                            <div class="nofee-option-icon">🔥</div>
-                        </div>
-                    </div>
-                </div>
-            `;
+        // 데이터 사용량 질문 (새로운 단계)
+        askDataUsage: async function() {
+            this.state.currentStep = 'dataUsage';
             
-            this.state.chatContainer.insertAdjacentHTML('beforeend', optionsHTML);
-            this.scrollToBottom();
+            await this.showAIThinking('사용 패턴 분석 준비');
+            await this.addBotMessage('먼저 데이터 사용량이 궁금해요!\n평소 유튜브나 게임을 많이 하시나요? 📱');
+            
+            const options = [
+                { label: '📺 많이 써요 (무제한 필요)', value: 'high', emoji: '📺' },
+                { label: '📱 보통이에요', value: 'medium', emoji: '📱' },
+                { label: '💬 적게 써요 (SNS 정도)', value: 'low', emoji: '💬' }
+            ];
+            
+            this.showChoiceButtons(options, (selected) => {
+                this.state.userData.dataUsage = selected.value;
+                this.selectDataUsage(selected);
+            });
         },
         
-        // 휴대폰 선택 시작
-        startPhoneSelection: async function(type) {
-            this.state.currentStep = 'price';
+        // 데이터 사용량 선택
+        selectDataUsage: async function(selected) {
+            await this.addUserMessage(selected.label);
             
-            if (type === 'self') {
-                await this.addUserMessage('맞춤 추천');
-                await this.showAIThinking('최적의 상품을 찾기 위해 분석 중');
-                await this.addBotMessage('좋은 선택이에요! 😊\n몇 가지만 여쭤볼게요.');
-            } else {
-                await this.addUserMessage('베스트 상품');
-                await this.showAIThinking('인기 상품 분석 중');
-                await this.addBotMessage('지금 가장 핫한 상품들을 보여드릴게요! 🔥');
+            let message = '';
+            switch(selected.value) {
+                case 'high':
+                    message = '무제한 요금제가 필요하시군요! 데이터 걱정 없는 플랜으로 추천드릴게요 🚀';
+                    break;
+                case 'medium':
+                    message = '적절한 데이터 요금제로 추천드릴게요! 균형잡힌 선택이네요 👍';
+                    break;
+                case 'low':
+                    message = '알뜰한 요금제로 추천드릴게요! 스마트한 선택이에요 💰';
+                    break;
             }
             
+            await this.showAIThinking('맞춤 요금제 분석 중');
+            await this.addBotMessage(message);
             await this.utils.delay(300);
+            
             this.askPriceRange();
         },
         
         // 가격대 질문
         askPriceRange: async function() {
-            await this.addBotMessage('원하시는 월 납부금액대를 선택해주세요.');
+            this.state.currentStep = 'price';
+            await this.addBotMessage('선호하시는 월 납부 요금대를 골라주세요 💳');
             
             const priceRanges = [
-                { label: '3만원 이하', value: '0-30000', emoji: '💰' },
-                { label: '3-5만원', value: '30000-50000', emoji: '💵' },
-                { label: '5-10만원', value: '50000-100000', emoji: '💸' },
-                { label: '10만원 이상', value: '100000-9999999', emoji: '💎' }
-            ];
-            
-            this.showChoiceButtons(priceRanges, (selected) => {
-                this.state.filters.priceRange = selected.value;
-                this.selectPrice(selected);
-            });
-        },
-        
-        // 가격 선택
-        selectPrice: async function(selected) {
-            await this.addUserMessage(selected.label);
-            this.state.currentStep = 'carrier';
-            
-            await this.showAIThinking('통신사별 혜택 분석 중');
-            await this.addBotMessage('어느 통신사를 사용하시나요? 📡');
-            
-            this.askCarrier();
-        },
-        
-        // 통신사 질문
-        askCarrier: function() {
-            const carriers = [
-                { label: 'SKT', value: 'SK', color: '#f53d3d' },
-                { label: 'KT', value: 'KT', color: '#0070f3' },
-                { label: 'LG U+', value: 'LG', color: '#e91e63' },
-                { label: '상관없음', value: 'all', color: '#666' }
+                { label: '3~5만원', value: '30000-50000', range: [30000, 50000] },
+                { label: '5~7만원', value: '50000-70000', range: [50000, 70000] },
+                { label: '7~9만원', value: '70000-90000', range: [70000, 90000] },
+                { label: '9~10만원', value: '90000-100000', range: [90000, 100000] },
+                { label: '10만원 이상', value: '100000-9999999', range: [100000, 9999999] }
             ];
             
             const buttonsHTML = `
                 <div class="nofee-message">
                     <div class="nofee-choice-buttons">
-                        ${carriers.map(carrier => `
+                        ${priceRanges.map(range => `
                             <button class="nofee-choice-btn" 
-                                    onclick="NofeeAI.selectCarrier('${carrier.value}', '${carrier.label}')"
-                                    style="border-color: ${carrier.color}; color: ${carrier.color};">
-                                ${carrier.label}
+                                    onclick="NofeeAI.selectPrice('${range.value}', '${range.label}')">
+                                ${range.label}
+                            </button>
+                        `).join('')}
+                    </div>
+                    ${this.state.currentStep !== 'dataUsage' ? this.createBackButton() : ''}
+                </div>
+            `;
+            
+            this.state.chatContainer.insertAdjacentHTML('beforeend', buttonsHTML);
+            this.scrollToBottom();
+        },
+        
+        // 가격 선택
+        selectPrice: async function(value, label) {
+            await this.addUserMessage(label);
+            this.state.filters.priceRange = value;
+            this.state.currentStep = 'brand';
+            
+            await this.showAIThinking('브랜드별 최적 상품 분석 중');
+            await this.addBotMessage('어느 브랜드를 원하시나요? 🏢');
+            
+            this.askBrand();
+        },
+        
+        // 브랜드 질문
+        askBrand: function() {
+            const brands = [
+                { label: '삼성', value: '삼성' },
+                { label: '애플', value: '애플' },
+                { label: '기타', value: '기타' }
+            ];
+            
+            const buttonsHTML = `
+                <div class="nofee-message">
+                    <div class="nofee-choice-buttons">
+                        ${brands.map(brand => `
+                            <button class="nofee-choice-btn" 
+                                    onclick="NofeeAI.selectBrand('${brand.value}', '${brand.label}')">
+                                ${brand.label}
                             </button>
                         `).join('')}
                     </div>
@@ -217,47 +284,97 @@
             this.scrollToBottom();
         },
         
-        // 통신사 선택
-        selectCarrier: async function(value, label) {
+        // 브랜드 선택
+        selectBrand: async function(value, label) {
             await this.addUserMessage(label);
-            this.state.filters.carrier = value;
-            this.state.currentStep = 'brand';
+            this.state.filters.brand = value;
+            this.state.currentStep = 'preference';
             
-            await this.showAIThinking('브랜드별 상품 매칭 중');
-            await this.addBotMessage('선호하는 브랜드가 있으신가요? 📱');
+            await this.showAIThinking('사용 패턴 파악 중');
+            await this.addBotMessage('마지막으로, 가장 중요하게 생각하시는 건 무엇인가요? 🤔');
             
-            this.askBrand();
+            this.askPreference();
         },
         
-        // 브랜드 질문
-        askBrand: function() {
-            const brands = [
-                { label: '삼성', value: '삼성', emoji: '🇰🇷' },
-                { label: '애플', value: '애플', emoji: '🍎' },
-                { label: 'LG', value: 'LG', emoji: '📱' },
-                { label: '기타', value: '기타', emoji: '📱' },
-                { label: '상관없음', value: 'all', emoji: '🤷' }
+        // 사용 패턴 질문 (새로운 단계)
+        askPreference: function() {
+            const preferences = [
+                { label: '📸 카메라 (사진/영상)', value: 'camera', emoji: '📸' },
+                { label: '🎮 성능 (게임/앱)', value: 'game', emoji: '🎮' },
+                { label: '🔋 배터리 (오래 사용)', value: 'battery', emoji: '🔋' },
+                { label: '💰 가격 (가성비)', value: 'price', emoji: '💰' }
             ];
             
-            this.showChoiceButtons(brands.map(b => ({
-                ...b,
-                label: `${b.emoji} ${b.label}`
-            })), (selected) => {
-                const brand = brands.find(b => `${b.emoji} ${b.label}` === selected.label);
-                this.state.filters.brand = brand.value;
-                this.selectBrand(brand);
+            this.showChoiceButtons(preferences, (selected) => {
+                this.state.userData.preference = selected.value;
+                this.selectPreference(selected);
             });
         },
         
-        // 브랜드 선택 및 결과
-        selectBrand: async function(brand) {
-            await this.addUserMessage(brand.label);
+        // 선호도 선택 후 결과 표시
+        selectPreference: async function(selected) {
+            await this.addUserMessage(selected.label);
             this.state.currentStep = 'results';
             
-            await this.showAIThinking('맞춤 상품 검색 중');
+            await this.showAIThinking('AI가 최적의 상품을 찾고 있어요');
             await this.utils.delay(1500);
             
             this.showFilteredPhones();
+        },
+        
+        // 스마트 추천 알고리즘
+        rankProducts: function(products) {
+            const { dataUsage, preference } = this.state.userData;
+            
+            return products.map(phone => {
+                let score = 100;
+                
+                // 1. 기본 가격 점수 (낮을수록 높은 점수)
+                score -= (phone.total / 1000);
+                
+                // 2. 추가 할인 점수
+                if (phone.hasExtraDiscount) {
+                    score += phone.extraDiscountAmount / 500;
+                }
+                
+                // 3. 데이터 사용량에 따른 요금제 비중 점수
+                if (dataUsage === 'high' && phone.planPortion > 0.5) {
+                    score += 20; // 무제한 요금제 선호
+                } else if (dataUsage === 'low' && phone.planPortion < 0.3) {
+                    score += 20; // 저렴한 요금제 선호
+                }
+                
+                // 4. 선호도에 따른 모델 점수
+                if (preference === 'camera') {
+                    // 프로/울트라/플러스 모델 가산점
+                    if (phone.model.includes('Pro') || phone.model.includes('울트라') || phone.model.includes('플러스')) {
+                        score += 30;
+                    }
+                } else if (preference === 'game') {
+                    // 최신 모델 가산점
+                    if (phone.model.includes('S25') || phone.model.includes('16')) {
+                        score += 25;
+                    }
+                } else if (preference === 'battery') {
+                    // 플러스/울트라/맥스 모델 가산점
+                    if (phone.model.includes('플러스') || phone.model.includes('울트라') || phone.model.includes('Max')) {
+                        score += 20;
+                    }
+                } else if (preference === 'price') {
+                    // 추가 할인이 큰 상품 가산점
+                    score += phone.extraDiscountAmount / 300;
+                }
+                
+                // 5. 마진율이 낮은 "숨은 딜" 가산점
+                if (phone.margin < 0.25 && phone.margin > 0) {
+                    score += 15;
+                }
+                
+                // 점수 저장
+                this.state.recommendationScore[phone.model] = score;
+                
+                return { ...phone, score };
+            }).sort((a, b) => b.score - a.score);
         },
         
         // 필터링된 휴대폰 표시
@@ -265,27 +382,36 @@
             let filtered = [...this.state.phoneData];
             
             // 가격 필터링
-            if (this.state.filters.priceRange && this.state.filters.priceRange !== 'all') {
+            if (this.state.filters.priceRange) {
                 const [min, max] = this.state.filters.priceRange.split('-').map(Number);
-                filtered = filtered.filter(phone => {
-                    const monthlyPayment = phone['Total Monthly Payment'] || 0;
-                    return monthlyPayment >= min && monthlyPayment <= max;
-                });
-            }
-            
-            // 통신사 필터링
-            if (this.state.filters.carrier && this.state.filters.carrier !== 'all') {
-                filtered = filtered.filter(phone => phone.Carrier === this.state.filters.carrier);
+                filtered = filtered.filter(phone => phone.total >= min && phone.total <= max);
             }
             
             // 브랜드 필터링
-            if (this.state.filters.brand && this.state.filters.brand !== 'all') {
+            if (this.state.filters.brand && this.state.filters.brand !== '기타') {
                 filtered = filtered.filter(phone => phone.Brand === this.state.filters.brand);
             }
             
-            // 중복 제거 및 정렬
-            const uniquePhones = this.utils.getUniquePhones(filtered);
-            const displayPhones = uniquePhones.slice(0, 5);
+            // 스마트 랭킹 적용
+            const ranked = this.rankProducts(filtered);
+            
+            // 중복 제거
+            const uniquePhones = this.utils.getUniquePhones(ranked);
+            let displayPhones = uniquePhones.slice(0, 5);
+            
+            // 결과가 없으면 조건 완화
+            if (displayPhones.length === 0) {
+                await this.addBotMessage('정확한 조건의 상품이 없어서 유사한 상품을 찾아봤어요! 🔍');
+                
+                // 가격대 ±10000원으로 확장
+                const [min, max] = this.state.filters.priceRange.split('-').map(Number);
+                filtered = this.state.phoneData.filter(phone => 
+                    phone.total >= (min - 10000) && phone.total <= (max + 10000)
+                );
+                
+                const relaxedRanked = this.rankProducts(filtered);
+                displayPhones = this.utils.getUniquePhones(relaxedRanked).slice(0, 5);
+            }
             
             if (displayPhones.length === 0) {
                 await this.addBotMessage('조건에 맞는 휴대폰이 없습니다. 😢\n다른 조건으로 다시 검색해보시겠어요?');
@@ -293,33 +419,60 @@
                 return;
             }
             
-            await this.addBotMessage(`조건에 맞는 휴대폰 ${displayPhones.length}개를 찾았어요! 🎉`);
+            // AI 추천 메시지
+            let recommendMessage = `추천드릴 수 있는 상품입니다! `;
+            if (this.state.userData.preference === 'camera') {
+                recommendMessage += '📸 카메라 성능이 뛰어난 모델 위주로 선별했어요!';
+            } else if (this.state.userData.preference === 'game') {
+                recommendMessage += '🎮 최신 프로세서로 게임도 끊김없이!';
+            } else if (this.state.userData.preference === 'battery') {
+                recommendMessage += '🔋 대용량 배터리로 하루종일 든든해요!';
+            } else if (this.state.userData.preference === 'price') {
+                recommendMessage += '💰 가성비 최고! 추가 할인이 큰 상품들이에요!';
+            }
             
+            await this.addBotMessage(recommendMessage);
+            
+            // 상품 카드 표시
             const phonesHTML = `
                 <div class="nofee-message">
-                    ${displayPhones.map((phone, index) => `
+                    ${displayPhones.map((phone, index) => {
+                        const hasSpecialDeal = phone.margin < 0.25 && phone.margin > 0;
+                        const hasMegaDiscount = phone.extraDiscountAmount > 10000;
+                        
+                        return `
                         <div class="nofee-phone-card" onclick="NofeeAI.selectPhone(${index})">
+                            ${hasSpecialDeal ? '<span class="nofee-special-badge">⚡️ 숨은 특가</span>' : ''}
+                            ${hasMegaDiscount ? '<span class="nofee-mega-badge">🔥 초특가</span>' : ''}
                             <div class="nofee-phone-header">
                                 <div class="nofee-phone-info">
-                                    <h4>${phone.Model}</h4>
-                                    <p>${phone.Storage || '128GB'} | ${phone.Plan || '5G 베이직'}</p>
+                                    <h4>${phone.model}</h4>
+                                    <p>${phone.activation} · ${phone.carrier} · ${phone.contract} · ${phone.storage}</p>
                                 </div>
-                                <div class="nofee-carrier-badge ${this.utils.getCarrierClass(phone.Carrier)}">
-                                    ${phone.Carrier}
+                                <div class="nofee-carrier-badge ${this.utils.getCarrierClass(phone.carrier)}">
+                                    ${phone.carrier}
                                 </div>
                             </div>
                             <div class="nofee-price-info">
                                 <div class="nofee-price-item">
                                     <div class="nofee-price-label">정가</div>
-                                    <div class="nofee-price-value">${this.utils.formatPrice(phone['Retail Price'])}원</div>
+                                    <div class="nofee-price-value">${this.utils.formatPrice(phone.devicePrice)}원</div>
                                 </div>
                                 <div class="nofee-price-item">
                                     <div class="nofee-price-label">월 납부금</div>
-                                    <div class="nofee-price-value highlight">${this.utils.formatPrice(phone['Total Monthly Payment'])}원</div>
+                                    <div class="nofee-price-value highlight">
+                                        ₩${this.utils.formatPrice(phone.total)}
+                                    </div>
                                 </div>
                             </div>
+                            ${phone.hasExtraDiscount ? `
+                                <div class="nofee-extra-discount">
+                                    <span>(-${this.utils.formatPrice(phone.extraDiscountAmount)}원 추가 할인)</span>
+                                </div>
+                            ` : ''}
+                            ${this.checkUpgradeOption(phone, displayPhones) || ''}
                         </div>
-                    `).join('')}
+                    `}).join('')}
                     ${this.createBackButton()}
                 </div>
             `;
@@ -331,55 +484,89 @@
             this.scrollToBottom();
         },
         
+        // 업그레이드 옵션 체크
+        checkUpgradeOption: function(phone, allPhones) {
+            // 같은 모델의 더 큰 용량 찾기
+            const sameModelHigherStorage = allPhones.find(p => 
+                p.model === phone.model && 
+                parseInt(p.storage) > parseInt(phone.storage)
+            );
+            
+            if (sameModelHigherStorage) {
+                const priceDiff = sameModelHigherStorage.total - phone.total;
+                if (priceDiff < 3000 && priceDiff > 0) {
+                    const storageDiff = parseInt(sameModelHigherStorage.storage) - parseInt(phone.storage);
+                    return `<div class="nofee-upgrade-tip">
+                        💡 ${storageDiff}GB 더 큰 용량이 월 ${this.utils.formatPrice(priceDiff)}원 차이!
+                    </div>`;
+                }
+            }
+            return '';
+        },
+        
         // 휴대폰 선택
         selectPhone: async function(index) {
             const phone = window.NofeeDisplayedPhones[index];
-            this.state.selectedPhone = phone;
-            this.state.currentStep = 'purchase';
+            this.state.selectedProduct = phone;
+            this.state.currentStep = 'confirm';
             
-            await this.addUserMessage(`${phone.Model} 선택`);
-            await this.showAIThinking('상품 정보 확인 중');
-            await this.addBotMessage(`${phone.Model}을 선택하셨네요! 훌륭한 선택이에요! 👍`);
+            await this.addUserMessage(`${phone.model} 선택`);
+            await this.showAIThinking('선택하신 상품 정보 확인 중');
             
-            // 체크리스트 표시
-            const checklistHTML = `
-                <div class="nofee-message">
-                    <div class="nofee-checklist">
-                        <div class="nofee-checklist-item">
-                            <span class="check">✓</span> 전국 최저가 보장
-                        </div>
-                        <div class="nofee-checklist-item">
-                            <span class="check">✓</span> 정품 새제품 100%
-                        </div>
-                        <div class="nofee-checklist-item">
-                            <span class="check">✓</span> 안전 결제 시스템
-                        </div>
-                        <div class="nofee-checklist-item">
-                            <span class="check">✓</span> 전문 상담사 1:1 케어
-                        </div>
-                    </div>
-                    <div class="nofee-choice-buttons" style="margin-top: 20px;">
-                        <button class="nofee-choice-btn" onclick="NofeeAI.startPurchase()">
-                            🛒 구매 신청하기
-                        </button>
-                        <button class="nofee-choice-btn" onclick="NofeeAI.showPhoneList()">
-                            📱 다른 휴대폰 보기
-                        </button>
-                    </div>
-                </div>
-            `;
+            // 확인 메시지
+            let confirmMessage = `📱 ${phone.model} (${phone.storage})\n`;
+            confirmMessage += `📝 ${phone.activation} · ${phone.carrier} · ${phone.contract}\n`;
+            confirmMessage += `💰 월 ${this.utils.formatPrice(phone.total)}원`;
             
-            this.state.chatContainer.insertAdjacentHTML('beforeend', checklistHTML);
-            this.scrollToBottom();
+            if (phone.hasExtraDiscount) {
+                confirmMessage += ` (-${this.utils.formatPrice(phone.extraDiscountAmount)}원 추가 할인)`;
+            }
+            
+            confirmMessage += '\n\n신청을 진행할까요?';
+            
+            await this.addBotMessage(confirmMessage);
+            
+            // AI 추천 이유 설명
+            if (this.state.recommendationScore[phone.model] > 100) {
+                let reason = '✨ AI 추천 이유: ';
+                if (phone.hasExtraDiscount && phone.extraDiscountAmount > 5000) {
+                    reason += '추가 할인이 크고, ';
+                }
+                if (this.state.userData.preference === 'camera' && 
+                    (phone.model.includes('Pro') || phone.model.includes('울트라'))) {
+                    reason += '카메라 성능이 뛰어나며, ';
+                }
+                if (phone.margin < 0.25) {
+                    reason += '특별 할인 상품이에요!';
+                } else {
+                    reason += '고객님 조건에 딱 맞아요!';
+                }
+                
+                await this.utils.delay(300);
+                await this.addBotMessage(reason);
+            }
+            
+            // 선택 버튼
+            this.showChoiceButtons([
+                { label: '예', value: 'yes' },
+                { label: '아니요', value: 'no' }
+            ], (selected) => {
+                if (selected.value === 'yes') {
+                    this.startPurchase();
+                } else {
+                    this.state.currentStep = 'price';
+                    this.askPriceRange();
+                }
+            });
         },
         
         // 구매 시작
         startPurchase: async function() {
             this.state.currentStep = 'customer_name';
             
-            await this.addUserMessage('구매 신청하기');
+            await this.addUserMessage('예');
             await this.showAIThinking('신청서 준비 중');
-            await this.addBotMessage('구매 신청을 도와드릴게요! 📝\n먼저 성함을 알려주세요.');
+            await this.addBotMessage('좋은 선택이세요! 👍\n신청을 도와드릴게요. 성함을 입력해주세요.');
             
             this.showInputField('text', '홍길동', (value) => {
                 this.state.customerInfo.name = value;
@@ -391,8 +578,8 @@
         askPhone: async function() {
             this.state.currentStep = 'customer_phone';
             
-            await this.showAIThinking('연락처 입력 준비');
-            await this.addBotMessage('연락 가능한 전화번호를 입력해주세요.\n("-" 없이 숫자만 입력)');
+            await this.showAIThinking();
+            await this.addBotMessage('전화번호를 입력해주세요. (\'-\' 없이)');
             
             this.showInputField('tel', '01012345678', (value) => {
                 if (!this.utils.validatePhone(value)) {
@@ -408,8 +595,8 @@
         askRegion: async function() {
             this.state.currentStep = 'customer_region';
             
-            await this.showAIThinking('지역 정보 확인');
-            await this.addBotMessage('거주 중이신 시/도를 선택해주세요.');
+            await this.showAIThinking();
+            await this.addBotMessage('거주 중이신 시(도)를 선택해주세요.');
             
             const regions = this.state.regionData.map(r => r.name);
             
@@ -432,8 +619,8 @@
                 return;
             }
             
-            await this.showAIThinking('세부 지역 확인');
-            await this.addBotMessage('구/군을 선택해주세요.');
+            await this.showAIThinking();
+            await this.addBotMessage('군/구를 선택해주세요.');
             
             this.showSelectField(districts, (value) => {
                 this.state.customerInfo.district = value;
@@ -446,7 +633,7 @@
             this.state.currentStep = 'consent';
             
             await this.showAIThinking('마지막 단계');
-            await this.addBotMessage('개인정보 수집 및 이용에 동의하십니까?');
+            await this.addBotMessage('개인정보 수집·이용에 동의하십니까?');
             
             const consentHTML = `
                 <div class="nofee-message">
@@ -456,10 +643,10 @@
                         </a>
                         <div class="nofee-choice-buttons">
                             <button class="nofee-choice-btn" onclick="NofeeAI.handleConsent(true)">
-                                동의합니다
+                                동의
                             </button>
                             <button class="nofee-choice-btn" onclick="NofeeAI.handleConsent(false)">
-                                동의하지 않습니다
+                                비동의
                             </button>
                         </div>
                     </div>
@@ -473,10 +660,10 @@
         // 동의 처리
         handleConsent: async function(agreed) {
             if (agreed) {
-                await this.addUserMessage('동의합니다');
+                await this.addUserMessage('동의');
                 this.state.customerInfo.consent = true;
                 
-                await this.showAIThinking('신청 접수 중');
+                await this.showAIThinking('신청을 접수 중입니다');
                 
                 // 폼 데이터 채우기
                 this.fillFormData();
@@ -485,14 +672,24 @@
                 this.submitForm();
                 
                 // 성공 메시지
-                await this.addBotMessage('신청이 완료되었습니다! 🎉');
+                await this.addBotMessage('감사합니다. 신청을 접수 중입니다! 🎉');
+                await this.utils.delay(500);
+                
+                // 예상 절약 금액 계산
+                const monthlyDiscount = this.state.selectedProduct.extraDiscountAmount || 0;
+                const yearlyDiscount = monthlyDiscount * 24; // 2년 약정 기준
+                
+                if (yearlyDiscount > 0) {
+                    await this.addBotMessage(`💰 노피를 통해 2년간 ${this.utils.formatPrice(yearlyDiscount)}원을 절약하게 되셨어요!`);
+                }
+                
                 await this.utils.delay(300);
                 await this.addBotMessage('담당 매니저가 곧 연락드릴 예정입니다.\n노피를 선택해주셔서 감사합니다! 💙');
                 
                 this.showSuccessAnimation();
             } else {
-                await this.addUserMessage('동의하지 않습니다');
-                await this.addBotMessage('개인정보 동의 없이는 진행할 수 없습니다.\n메인 페이지로 돌아가시겠어요?');
+                await this.addUserMessage('비동의');
+                await this.addBotMessage('개인정보 동의 없이는 진행할 수 없습니다.\n나가시겠어요?');
                 
                 this.showChoiceButtons([
                     { label: '네', value: 'yes' },
@@ -515,18 +712,22 @@
                 customer_region: this.state.customerInfo.region,
                 customer_district: this.state.customerInfo.district,
                 privacy_consent: '동의함',
-                phone_model: this.state.selectedPhone.Model,
-                phone_carrier: this.state.selectedPhone.Carrier,
-                phone_plan: this.state.selectedPhone.Plan || '5G 베이직',
-                phone_price: this.state.selectedPhone['Retail Price'],
-                monthly_payment: this.state.selectedPhone['Total Monthly Payment'],
-                contract_type: this.state.selectedPhone['Contract Type'] || '공시지원',
-                activation_type: this.state.selectedPhone['Activation Type'] || '신규',
+                phone_model: this.state.selectedProduct.model,
+                phone_carrier: this.state.selectedProduct.carrier,
+                phone_plan: this.state.selectedProduct.Plan || '5G 베이직',
+                phone_price: this.state.selectedProduct.devicePrice,
+                monthly_payment: this.state.selectedProduct.total,
+                contract_type: this.state.selectedProduct.contract,
+                activation_type: this.state.selectedProduct.activation,
                 timestamp: new Date().toISOString(),
                 session_id: this.state.sessionId,
                 utm_source: this.utils.getUrlParam('utm_source') || 'direct',
                 utm_medium: this.utils.getUrlParam('utm_medium') || 'none',
-                utm_campaign: this.utils.getUrlParam('utm_campaign') || 'none'
+                utm_campaign: this.utils.getUrlParam('utm_campaign') || 'none',
+                // 추가 데이터
+                data_usage: this.state.userData.dataUsage,
+                user_preference: this.state.userData.preference,
+                ai_score: this.state.recommendationScore[this.state.selectedProduct.model] || 0
             };
             
             console.log('폼 데이터:', data);
@@ -632,7 +833,7 @@
                             </button>
                         `).join('')}
                     </div>
-                    ${this.state.currentStep !== 'intro' ? this.createBackButton() : ''}
+                    ${this.state.currentStep !== 'dataUsage' ? this.createBackButton() : ''}
                 </div>
             `;
             
@@ -736,7 +937,7 @@
         
         // 뒤로가기
         goBack: function() {
-            const steps = ['intro', 'price', 'carrier', 'brand', 'results', 'purchase'];
+            const steps = ['dataUsage', 'price', 'brand', 'preference', 'results', 'confirm', 'purchase'];
             const currentIndex = steps.indexOf(this.state.currentStep);
             
             if (currentIndex > 0) {
@@ -751,17 +952,17 @@
                 
                 // 이전 단계 다시 표시
                 switch (this.state.currentStep) {
-                    case 'intro':
-                        this.showInitialOptions();
+                    case 'dataUsage':
+                        this.askDataUsage();
                         break;
                     case 'price':
                         this.askPriceRange();
                         break;
-                    case 'carrier':
-                        this.askCarrier();
-                        break;
                     case 'brand':
                         this.askBrand();
+                        break;
+                    case 'preference':
+                        this.askPreference();
                         break;
                 }
             }
@@ -824,21 +1025,24 @@
         resetChat: function() {
             this.state = {
                 ...this.state,
-                currentStep: 'intro',
+                currentStep: 'dataUsage',
                 filters: {
                     priceRange: null,
                     carrier: null,
                     brand: null
                 },
-                selectedPhone: null,
-                customerInfo: {
+                userData: {
+                    dataUsage: null,
+                    preference: null,
                     name: '',
                     phone: '',
                     region: '',
                     district: '',
                     consent: false
                 },
-                messageHistory: []
+                selectedProduct: null,
+                messageHistory: [],
+                recommendationScore: {}
             };
             
             this.state.chatContainer.innerHTML = `
@@ -882,18 +1086,6 @@
                     sessionStorage.setItem(param, value);
                 }
             });
-            
-            // 사전 선택된 상품 체크
-            const modelName = params.get('model');
-            if (modelName) {
-                const phone = this.state.phoneData.find(p => p.Model === modelName);
-                if (phone) {
-                    this.state.selectedPhone = phone;
-                    this.state.currentStep = 'purchase';
-                    // 바로 구매 플로우로
-                    setTimeout(() => this.startPurchase(), 1000);
-                }
-            }
         },
         
         // 키보드 이벤트 설정
@@ -911,17 +1103,21 @@
             delay: (ms) => new Promise(resolve => setTimeout(resolve, ms)),
             
             formatPrice: (value) => {
-                if (!value) return '0';
-                return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                if (!value && value !== 0) return '0';
+                const absValue = Math.abs(value);
+                return absValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
             },
             
             getCarrierClass: (carrier) => {
-                switch(carrier) {
-                    case 'SK': return 'skt';
-                    case 'KT': return 'kt';
-                    case 'LG': return 'lgu';
-                    default: return '';
-                }
+                const carrierMap = {
+                    'SK': 'skt',
+                    'SKT': 'skt',
+                    'KT': 'kt',
+                    'LG': 'lgu',
+                    'LGU': 'lgu',
+                    'LG U+': 'lgu'
+                };
+                return carrierMap[carrier] || '';
             },
             
             validatePhone: (phone) => {
@@ -932,7 +1128,7 @@
             getUniquePhones: (phones) => {
                 const seen = new Set();
                 return phones.filter(phone => {
-                    const key = `${phone.Model}-${phone.Carrier}`;
+                    const key = `${phone.model}-${phone.carrier}-${phone.storage}`;
                     if (seen.has(key)) return false;
                     seen.add(key);
                     return true;
