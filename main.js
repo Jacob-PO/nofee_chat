@@ -733,14 +733,20 @@ const chatFlow = {
     
     // 구매 신청 제출
     submitPurchase() {
+        showTypingIndicator();
+
+        // Webflow form 찾기
         const webflowForm = document.querySelector('form[data-name="Chat Form"]') ||
                             document.querySelector('form[name="chat"]');
 
         if (!webflowForm) {
             console.error('Webflow form을 찾을 수 없습니다');
+            hideTypingIndicator();
+            chatUI.addBotMessage('죄송합니다. 제출 중 오류가 발생했습니다. 새로고침 후 다시 시도해주세요.');
             return;
         }
 
+        // 폼 데이터 채우기 헬퍼 함수
         const fillFormData = (fieldName, value) => {
             const field = webflowForm.querySelector(`[name="${fieldName}"]`);
             if (field) {
@@ -750,19 +756,112 @@ const chatFlow = {
             }
         };
 
-        fillFormData('model_name', state.selectedPhone.Model);
-        fillFormData('brand', state.selectedPhone.Brand);
-        fillFormData('price', state.selectedPhone['Total Monthly Payment']);
-        fillFormData('customer_name', state.userData.name);
-        fillFormData('customer_phone', state.userData.phone);
-        fillFormData('region', state.userData.region);
-        fillFormData('city', state.userData.city);
+        // 모든 필드 매핑
+        const phone = state.selectedPhone;
+        const user = state.userData;
 
-        const submitEvent = new Event('submit', {
-            bubbles: true,
-            cancelable: true
-        });
-        webflowForm.dispatchEvent(submitEvent);
+        // 상품 정보 필드
+        fillFormData('date', phone.Date || new Date().toISOString().split('T')[0]);
+        fillFormData('carrier', phone.Carrier);
+        fillFormData('brand', phone.Brand);
+        fillFormData('model_name', phone.Model);
+        fillFormData('storage', phone.Storage);
+        fillFormData('dealer', phone.Dealer);
+        fillFormData('retail_price', phone['Retail Price']);
+        fillFormData('plan_name', phone.Plan);
+        fillFormData('activation_type', phone['Activation Type']);
+        fillFormData('contract_type', phone['Contract Type']);
+        fillFormData('subsidy_type', phone['Contract Type']);
+
+        // 지원금 정보
+        fillFormData('official_subsidy', phone['Official Subsidy']);
+        fillFormData('dealer_subsidy', phone['Dealer Subsidy']);
+        fillFormData('dealer_subsidy_high', phone['Dealer Subsidy high']);
+
+        // 월 납부 정보
+        fillFormData('device_monthly_payment', phone['Monthly Device Fee']);
+        fillFormData('monthly_device_fee', phone['Monthly Device Fee']);
+        fillFormData('plan_monthly_payment', phone['Plan Principal']);
+        fillFormData('post_plan_monthly_payment', phone['Monthly Plan Fee']);
+        fillFormData('total_monthly_payment', phone['Total Monthly Payment']);
+
+        // 추가 금액 정보
+        fillFormData('device_principal', phone['Installment Principal']);
+        fillFormData('device_price_input', phone['Selling Price']);
+        fillFormData('optional_discount_ratio', phone['Dealer Subsidy high']);
+        fillFormData('margin', phone.Margin);
+        fillFormData('margin_amount', phone['Margin Amount']);
+
+        // 계약 기간
+        fillFormData('contract_months', '24');
+        fillFormData('plan_required_months', '24');
+        fillFormData('plan_effective_monthly_payment', phone['Monthly Plan Fee']);
+
+        // 고객 정보
+        fillFormData('name', user.name);
+        fillFormData('phone', user.phone);
+        fillFormData('email', user.email || '');
+        fillFormData('message', user.message || '');
+        fillFormData('region', user.region);
+        fillFormData('city', user.city);
+        fillFormData('consent', '동의함');
+
+        console.log('폼 데이터 채우기 완료');
+
+        // 폼 제출
+        setTimeout(() => {
+            hideTypingIndicator();
+
+            try {
+                // Webflow 폼 제출
+                webflowForm.submit();
+
+                // 성공 메시지 표시
+                let successMessage = `
+                    <div style="text-align: center; padding: 20px;">
+                        <h2 style="color: #48bb78;">✅ 구매 신청이 완료되었습니다!</h2>
+                        <p style="margin: 15px 0;">
+                            ${state.userData.name}님, ${state.selectedPhone.Model} 구매 신청이 정상적으로 접수되었습니다.
+                        </p>
+                        <p style="color: #718096;">
+                            담당자가 곧 ${state.userData.phone}로 연락드릴 예정입니다.<br>
+                            감사합니다! 😊
+                        </p>
+                    </div>
+                `;
+
+                chatUI.addBotMessage(successMessage, 10, true);
+
+                setTimeout(() => {
+                    chatUI.addBotMessage('다른 도움이 필요하신가요?');
+                    chatUI.showButtons(['처음으로', '종료'], (choice) => {
+                        if (choice === '처음으로') {
+                            // 상태 초기화
+                            state.userData = {
+                                priceRange: null,
+                                carrier: null,
+                                brand: null,
+                                activationType: null,
+                                name: '',
+                                phone: '',
+                                region: '',
+                                city: '',
+                                consent: false
+                            };
+                            state.filteredData = [...state.phoneData];
+                            state.selectedPhone = null;
+                            chatFlow.start();
+                        } else {
+                            chatUI.addBotMessage('노피 챗봇을 이용해주셔서 감사합니다. 좋은 하루 되세요! 👋');
+                        }
+                    }, false);
+                }, 1500);
+
+            } catch (error) {
+                console.error('폼 제출 오류:', error);
+                chatUI.addBotMessage('죄송합니다. 제출 중 오류가 발생했습니다. 다시 시도해주세요.');
+            }
+        }, 1000);
     },
     
     // 최신 폰 표시
@@ -1044,4 +1143,12 @@ document.addEventListener('DOMContentLoaded', function() {
 // 전역 함수로 노출 (HTML에서 호출 가능하도록)
 window.NofeeChatbot.chatFlow = chatFlow;
 window.NofeeChatbot.toggleFilter = toggleFilter;
+window.NofeeChatbot.formatPrice = formatPrice;
+window.NofeeChatbot.createPhoneListHTML = createPhoneListHTML;
+window.NofeeChatbot.showTypingIndicator = showTypingIndicator;
+window.NofeeChatbot.hideTypingIndicator = hideTypingIndicator;
+
+// 편의를 위한 전역 별칭
+window.chatFlow = chatFlow;
+window.toggleFilter = toggleFilter;
 })();
