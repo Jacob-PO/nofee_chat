@@ -1,17 +1,6 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>노피 AI 챗봇 - 수수료 없는 스마트폰 추천</title>
-    
-    <!-- 
-    🚀 Webflow 사용 가이드:
-    1. 이 HTML의 <style> 태그 내용을 Webflow의 Custom Code > Head Code에 추가하세요
-    2. <body> 내용을 Webflow의 Embed 요소에 추가하세요
-    3. JavaScript는 GitHub에 업로드 후 아래 script 태그의 주소를 수정하세요
-    -->
-    
+<!-- 노피 AI 챗봇 전체 코드 -->
+<div class="nofee-chatbot-wrapper">
+    <!-- CSS -->
     <style>
         * {
             margin: 0;
@@ -37,7 +26,7 @@
         }
 
         .header {
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             color: white;
@@ -563,8 +552,8 @@
             }
         }
     </style>
-</head>
-<body>
+
+    <!-- HTML 구조 -->
     <div class="container">
         <div class="header">
             <div class="ai-logo-container">
@@ -582,45 +571,44 @@
             </div>
         </div>
 
-    <!-- Webflow 제출폼 숨김 필드 -->
-    <!-- Apply 폼의 필드들과 연동됩니다 -->
-    <form id="chat-form" name="chat" style="display: none;">
-        <input id="model_name" name="model_name" type="hidden" />
-        <input id="carrier" name="carrier" type="hidden" />
-        <input id="date" name="date" type="hidden" />
-        <input id="contract_type" name="contract_type" type="hidden" />
-        <input id="subsidy_type" name="subsidy_type" type="hidden" />
-        <input id="contract_months" name="contract_months" type="hidden" />
-        <input id="plan_monthly_payment" name="plan_monthly_payment" type="hidden" />
-        <input id="post_plan_monthly_payment" name="post_plan_monthly_payment" type="hidden" />
-        <input id="device_principal" name="device_principal" type="hidden" />
-        <input id="device_price_input" name="device_price_input" type="hidden" />
-        <input id="brand" name="brand" type="hidden" />
-        <input id="plan_name" name="plan_name" type="hidden" />
-        <input id="plan_required_months" name="plan_required_months" type="hidden" />
-        <input id="plan_effective_monthly_payment" name="plan_effective_monthly_payment" type="hidden" />
-        <input id="device_monthly_payment" name="device_monthly_payment" type="hidden" />
-        <input id="optional_discount_ratio" name="optional_discount_ratio" type="hidden" />
-        <input id="total_monthly_payment" name="total_monthly_payment" type="hidden" />
-        <input id="storage" name="storage" type="hidden" />
-        <input id="dealer" name="dealer" type="hidden" />
-        <input id="retail_price" name="retail_price" type="hidden" />
-        <input id="official_subsidy" name="official_subsidy" type="hidden" />
-        <input id="dealer_subsidy" name="dealer_subsidy" type="hidden" />
-        <input id="dealer_subsidy_high" name="dealer_subsidy_high" type="hidden" />
-        <input id="margin" name="margin" type="hidden" />
-        <input id="margin_amount" name="margin_amount" type="hidden" />
-        <input id="monthly_device_fee" name="monthly_device_fee" type="hidden" />
-        <input id="activation_type" name="activation_type" type="hidden" />
-        <input id="name" name="name" type="hidden" />
-        <input id="phone" name="phone" type="hidden" />
-        <input id="email" name="email" type="hidden" />
-        <input id="message" name="message" type="hidden" />
-        <input id="region" name="region" type="hidden" />
-        <input id="city" name="city" type="hidden" />
-        <input id="consent" name="consent" type="hidden" value="동의함" />
-        <button type="submit" id="submit" style="display: none;">제출</button>
-    </form>
+        <!-- Webflow 제출폼 숨김 필드 -->
+        <form id="chat-form" name="chat" data-name="Chat Form" style="display: none;">
+            <input id="model_name" name="model_name" type="hidden" />
+            <input id="carrier" name="carrier" type="hidden" />
+            <input id="date" name="date" type="hidden" />
+            <input id="contract_type" name="contract_type" type="hidden" />
+            <input id="subsidy_type" name="subsidy_type" type="hidden" />
+            <input id="contract_months" name="contract_months" type="hidden" />
+            <input id="plan_monthly_payment" name="plan_monthly_payment" type="hidden" />
+            <input id="post_plan_monthly_payment" name="post_plan_monthly_payment" type="hidden" />
+            <input id="device_principal" name="device_principal" type="hidden" />
+            <input id="device_price_input" name="device_price_input" type="hidden" />
+            <input id="brand" name="brand" type="hidden" />
+            <input id="plan_name" name="plan_name" type="hidden" />
+            <input id="plan_required_months" name="plan_required_months" type="hidden" />
+            <input id="plan_effective_monthly_payment" name="plan_effective_monthly_payment" type="hidden" />
+            <input id="device_monthly_payment" name="device_monthly_payment" type="hidden" />
+            <input id="optional_discount_ratio" name="optional_discount_ratio" type="hidden" />
+            <input id="total_monthly_payment" name="total_monthly_payment" type="hidden" />
+            <input id="storage" name="storage" type="hidden" />
+            <input id="dealer" name="dealer" type="hidden" />
+            <input id="retail_price" name="retail_price" type="hidden" />
+            <input id="official_subsidy" name="official_subsidy" type="hidden" />
+            <input id="dealer_subsidy" name="dealer_subsidy" type="hidden" />
+            <input id="dealer_subsidy_high" name="dealer_subsidy_high" type="hidden" />
+            <input id="margin" name="margin" type="hidden" />
+            <input id="margin_amount" name="margin_amount" type="hidden" />
+            <input id="monthly_device_fee" name="monthly_device_fee" type="hidden" />
+            <input id="activation_type" name="activation_type" type="hidden" />
+            <input id="name" name="name" type="hidden" />
+            <input id="phone" name="phone" type="hidden" />
+            <input id="email" name="email" type="hidden" />
+            <input id="message" name="message" type="hidden" />
+            <input id="region" name="region" type="hidden" />
+            <input id="city" name="city" type="hidden" />
+            <input id="consent" name="consent" type="hidden" value="동의함" />
+            <button type="submit" id="submit" style="display: none;">제출</button>
+        </form>
 
         <div class="chat-container">
             <div class="chat-header">
@@ -677,101 +665,120 @@
         </div>
     </div>
 
-    <!-- Webflow Custom Code > Before </body> tag -->
+    <!-- JavaScript 로드 및 초기화 -->
     <script>
     (function() {
-        // 디버깅 플래그
-        window.NOFEE_DEBUG = true;
-
+        'use strict';
+        
+        console.log('🚀 노피 챗봇 초기화 시작...');
+        
         // 스크립트 로드 함수
         function loadScript(src, callback) {
             const script = document.createElement('script');
             script.src = src;
             script.onload = function() {
-                console.log('✅ 스크립트 로드 성공:', src);
+                console.log('✅ 스크립트 로드 성공');
                 if (callback) callback();
             };
             script.onerror = function() {
                 console.error('❌ 스크립트 로드 실패:', src);
-                alert('챗봇을 불러올 수 없습니다. 새로고침해주세요.');
+                setTimeout(() => {
+                    console.log('🔄 재시도 중...');
+                    loadScript(src, callback);
+                }, 2000);
             };
             document.body.appendChild(script);
         }
-
-        // DOM 로드 완료 후 실행
-        window.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Webflow 준비 완료, 챗봇 로드 시작');
-
-            // 챗봇 컨테이너 확인
+        
+        // DOM 로드 대기
+        function waitForDOM() {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initChatbot);
+            } else {
+                initChatbot();
+            }
+        }
+        
+        // 챗봇 초기화
+        function initChatbot() {
+            console.log('📋 DOM 로드 완료');
+            
+            // 필수 요소 확인
             const chatMessages = document.getElementById('chatMessages');
             if (!chatMessages) {
                 console.error('❌ chatMessages 컨테이너를 찾을 수 없습니다');
+                setTimeout(initChatbot, 1000);
                 return;
             }
-
-            // jsdelivr CDN에서 main.js 로드
+            
+            // GitHub 스크립트 로드
             const scriptUrl = 'https://cdn.jsdelivr.net/gh/Jacob-PO/nofee_chat@main/main.js';
-
+            
             loadScript(scriptUrl, function() {
                 // 로드 완료 확인
-                if (window.NofeeChatbot && window.NofeeChatbot.chatFlow) {
-                    console.log('✅ 노피 챗봇 초기화 완료');
-                } else {
-                    console.error('❌ 챗봇 초기화 실패');
+                if (window.NofeeChatbot) {
+                    console.log('✅ 노피 챗봇 로드 완료');
+                    
+                    // 데이터 로드 상태 모니터링
+                    let checkCount = 0;
+                    const checkData = setInterval(() => {
+                        if (window.NofeeChatbot.state && 
+                            window.NofeeChatbot.state.phoneData && 
+                            window.NofeeChatbot.state.phoneData.length > 0) {
+                            console.log(`✅ 상품 데이터 로드 완료: ${window.NofeeChatbot.state.phoneData.length}개`);
+                            clearInterval(checkData);
+                        } else {
+                            checkCount++;
+                            if (checkCount > 20) { // 10초 후 타임아웃
+                                console.error('❌ 데이터 로드 타임아웃');
+                                clearInterval(checkData);
+                            }
+                        }
+                    }, 500);
                 }
             });
-        });
-
+        }
+        
         // 디버깅 도구
         window.NofeeChatbotDebug = {
             checkForm: function() {
                 const forms = document.querySelectorAll('form');
-                console.log('📋 발견된 폼:', forms.length);
+                console.log('\n=== 📋 폼 체크 ===');
                 forms.forEach((form, i) => {
-                    console.log(`폼 ${i}:`, {
-                        name: form.name,
-                        dataName: form.getAttribute('data-name'),
-                        fields: form.querySelectorAll('input').length
-                    });
+                    console.log(`\n폼 ${i + 1}:`);
+                    console.log('- Name:', form.name || '없음');
+                    console.log('- Data-name:', form.getAttribute('data-name') || '없음');
+                    const inputs = form.querySelectorAll('input');
+                    console.log(`- 입력 필드: ${inputs.length}개`);
                 });
             },
-
+            
             checkData: function() {
+                console.log('\n=== 📊 데이터 체크 ===');
                 if (window.NofeeChatbot && window.NofeeChatbot.state) {
                     const state = window.NofeeChatbot.state;
-                    console.log('📊 데이터 상태:', {
-                        상품데이터: state.phoneData?.length || 0,
-                        지역데이터: state.regionData?.length || 0,
-                        필터링된데이터: state.filteredData?.length || 0
-                    });
+                    console.log('상품 데이터:', state.phoneData?.length || 0, '개');
+                    console.log('지역 데이터:', state.regionData?.length || 0, '개');
+                    console.log('현재 단계:', state.currentStep);
                 } else {
-                    console.log('❌ 챗봇 상태를 찾을 수 없습니다');
-                }
-            },
-
-            testSubmit: function() {
-                const form = document.querySelector('form[data-name="Chat Form"]');
-                if (form) {
-                    console.log('🧪 테스트 제출 시작');
-                    // 테스트 데이터 채우기
-                    const testData = {
-                        name: '테스트',
-                        phone: '01012345678',
-                        model_name: '테스트폰'
-                    };
-
-                    Object.keys(testData).forEach(key => {
-                        const field = form.querySelector(`[name="${key}"]`);
-                        if (field) field.value = testData[key];
-                    });
-
-                    console.log('제출 준비 완료');
-                } else {
-                    console.error('❌ Chat Form을 찾을 수 없습니다');
+                    console.log('❌ 챗봇 데이터가 아직 로드되지 않았습니다');
                 }
             }
         };
+        
+        // 전역 에러 핸들러
+        window.addEventListener('error', function(e) {
+            if (e.filename && e.filename.includes('nofee_chat')) {
+                console.error('🚨 챗봇 에러:', e.message);
+            }
+        });
+        
+        // 초기화 시작
+        waitForDOM();
+        
+        console.log('\n📚 디버깅 명령어:');
+        console.log('- NofeeChatbotDebug.checkForm() : 폼 확인');
+        console.log('- NofeeChatbotDebug.checkData() : 데이터 확인');
     })();
     </script>
-</body>
-</html>
+</div>
