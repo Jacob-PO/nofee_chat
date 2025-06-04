@@ -821,11 +821,11 @@ const chatFlow = {
             hideTypingIndicator();
 
             try {
-                // Webflow 폼 제출
                 if (window.submitWebflowForm) {
                     window.submitWebflowForm();
                 } else {
-                    webflowForm.submit();
+                    const form = document.getElementById('chat-form');
+                    if (form) form.submit();
                 }
 
                 // 성공 메시지 표시
