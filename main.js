@@ -94,7 +94,7 @@ const dataManager = {
             showTypingIndicator();
             
             // 상품 데이터와 지역 데이터를 동시에 로드
-            const baseUrl = 'https://cdn.jsdelivr.net/gh/Jacob-PO/nofee_chat@main/';
+            const baseUrl = window.NOFEE_BASE_URL || 'https://cdn.jsdelivr.net/gh/Jacob-PO/nofee_chat@main/';
 
             const [phoneResponse, regionResponse] = await Promise.all([
                 fetch(baseUrl + 'item.json'),
@@ -1135,6 +1135,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 데이터 로드
         dataManager.loadAllData();
+        // expose internal state for debugging
+        window.NofeeChatbot.state = state;
     } else {
         console.error('chatMessages 컨테이너를 찾을 수 없습니다.');
     }
