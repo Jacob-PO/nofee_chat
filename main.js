@@ -120,18 +120,48 @@
                     this.fetchWithFallback('regions.json')
                 ]);
                 
-                // 데이터 변환
-                this.state.phoneData = this.transformProducts(phoneData || []);
-                this.state.regionData = regionData || [];
+                // 데이터 유효성 검사
+                if (!phoneData || !Array.isArray(phoneData) || phoneData.length === 0) {
+                    throw new Error('휴대폰 데이터가 비어있습니다');
+                }
                 
-                console.log(`휴대폰 데이터: ${this.state.phoneData.length}개`);
-                console.log(`지역 데이터: ${this.state.regionData.length}개`);
+                if (!regionData || !Array.isArray(regionData) || regionData.length === 0) {
+                    throw new Error('지역 데이터가 비어있습니다');
+                }
+                
+                // 데이터 변환
+                this.state.phoneData = this.transformProducts(phoneData);
+                this.state.regionData = regionData;
+                
+                console.log(`휴대폰 데이터: ${this.state.phoneData.length}개 로드 완료`);
+                console.log(`지역 데이터: ${this.state.regionData.length}개 로드 완료`);
                 
                 this.hideAIThinking();
             } catch (error) {
                 console.error('데이터 로드 실패:', error);
                 this.hideAIThinking();
-                this.addBotMessage('데이터를 불러오는데 실패했습니다. 잠시 후 다시 시도해주세요.');
+                
+                // 더 자세한 에러 메시지
+                let errorMessage = '데이터를 불러오는데 실패했습니다. ';
+                if (error.message.includes('휴대폰')) {
+                    errorMessage += '휴대폰 상품 정보를 가져올 수 없습니다.';
+                } else if (error.message.includes('지역')) {
+                    errorMessage += '지역 정보를 가져올 수 없습니다.';
+                } else {
+                    errorMessage += '잠시 후 다시 시도해주세요.';
+                }
+                
+                await this.addBotMessage(errorMessage);
+                
+                // 재시도 버튼
+                const retryHTML = `
+                    <div class="nofee-message">
+                        <button class="nofee-choice-btn" onclick="location.reload()">
+                            🔄 새로고침
+                        </button>
+                    </div>
+                `;
+                this.state.chatContainer.insertAdjacentHTML('beforeend', retryHTML);
             }
         },
         
@@ -658,9 +688,18 @@
             const consentHTML = `
                 <div class="nofee-message">
                     <div class="nofee-input-wrapper">
-                        <a href="/privacy" target="_blank" class="nofee-privacy-link">
+                        <a href="https://nofee.team/policy" target="_blank" class="nofee-privacy-link">
                             개인정보 처리방침 보기
                         </a>
+                        <div class="nofee-consent-info" style="font-size: 12px; color: #666; margin-bottom: 15px; line-height: 1.5;">
+                            <p><strong>노피(nofee)</strong>가 수집하는 정보:</p>
+                            <ul style="margin: 5px 0 10px 20px;">
+                                <li>성명, 휴대폰 번호, 지역 정보</li>
+                                <li>희망 휴대폰 모델 및 통신사</li>
+                            </ul>
+                            <p>수집된 정보는 휴대폰 구매 상담 목적으로만 사용되며, 제휴 판매점에 제공됩니다.</p>
+                            <p>보유기간: 상담 신청일로부터 1년</p>
+                        </div>
                         <div class="nofee-choice-buttons">
                             <button class="nofee-choice-btn" onclick="NofeeAI.handleConsent(true)">
                                 동의
