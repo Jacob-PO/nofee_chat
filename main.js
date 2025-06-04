@@ -1,6 +1,5 @@
 // 노피 AI 챗봇 - main.js (안정화 버전)
 // 즉시 window 객체에 등록
-window.NofeeAI = window.NofeeAI || {};
 
 // 디버깅용 로그
 console.log('노피 AI 스크립트 실행 시작');
@@ -119,9 +118,11 @@ window.NofeeAI = {
             if (!base && base !== '') continue; // skip if undefined
             try {
                 const itemRes = await fetch(base + 'item.json');
+                if (!itemRes.ok) throw new Error('item.json load failed');
                 const itemData = await itemRes.json();
 
                 const regionRes = await fetch(base + 'regions.json');
+                if (!regionRes.ok) throw new Error('regions.json load failed');
                 const regionData = await regionRes.json();
 
                 this.state.phoneData = this.transformProducts(itemData);
@@ -537,13 +538,11 @@ window.NofeeAI = {
     showButtons: function(options, callback) {
         const btnDiv = document.createElement('div');
         btnDiv.style.cssText = 'margin: 15px 0; display: flex; flex-wrap: wrap; gap: 10px;';
-        
+
         options.forEach(option => {
             const btn = document.createElement('button');
             btn.textContent = option;
-            btn.style.cssText = 'padding: 12px 24px; border: 2px solid #5C5CFF; background: white; color: #5C5CFF; border-radius: 25px; font-size: 15px; cursor: pointer; transition: all 0.3s;';
-            btn.onmouseover = () => btn.style.background = '#5C5CFF';
-            btn.onmouseout = () => btn.style.background = 'white';
+            btn.className = 'nofee-option-btn';
             btn.onclick = () => {
                 btnDiv.remove();
                 callback(option);
@@ -680,12 +679,15 @@ window.NofeeAI = {
     delay: (ms) => new Promise(resolve => setTimeout(resolve, ms)),
     
     formatPrice: function(value) {
-        return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        return Number(value).toLocaleString();
     },
     
     scrollToBottom: function() {
         if (this.state.chatContainer) {
-            this.state.chatContainer.scrollTop = this.state.chatContainer.scrollHeight;
+            this.state.chatContainer.scrollTo({
+                top: this.state.chatContainer.scrollHeight,
+                behavior: 'smooth'
+            });
         }
     }
 };
