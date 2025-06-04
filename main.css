@@ -475,13 +475,12 @@
 
 /* AI 생각중 애니메이션 */
 .nofee-ai-thinking {
-    display: none;
     padding: 20px;
     text-align: center;
 }
 
 .nofee-ai-thinking.show {
-    display: block;
+    display: block !important;
 }
 
 .nofee-ai-dots {
