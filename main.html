@@ -677,11 +677,101 @@
         </div>
     </div>
 
-    <!-- GitHub에서 가져올 main.js -->
-    <!-- GitHub Pages 사용 시 -->
-    <script src="https://jacob-po.github.io/nofee_chat/main.js"></script>
-    
-    <!-- 또는 jsdelivr CDN 사용 시 (더 빠름) -->
-    <!-- <script src="https://cdn.jsdelivr.net/gh/Jacob-PO/nofee_chat@main/main.js"></script> -->
+    <!-- Webflow Custom Code > Before </body> tag -->
+    <script>
+    (function() {
+        // 디버깅 플래그
+        window.NOFEE_DEBUG = true;
+
+        // 스크립트 로드 함수
+        function loadScript(src, callback) {
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = function() {
+                console.log('✅ 스크립트 로드 성공:', src);
+                if (callback) callback();
+            };
+            script.onerror = function() {
+                console.error('❌ 스크립트 로드 실패:', src);
+                alert('챗봇을 불러올 수 없습니다. 새로고침해주세요.');
+            };
+            document.body.appendChild(script);
+        }
+
+        // DOM 로드 완료 후 실행
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Webflow 준비 완료, 챗봇 로드 시작');
+
+            // 챗봇 컨테이너 확인
+            const chatMessages = document.getElementById('chatMessages');
+            if (!chatMessages) {
+                console.error('❌ chatMessages 컨테이너를 찾을 수 없습니다');
+                return;
+            }
+
+            // jsdelivr CDN에서 main.js 로드
+            const scriptUrl = 'https://cdn.jsdelivr.net/gh/Jacob-PO/nofee_chat@main/main.js';
+
+            loadScript(scriptUrl, function() {
+                // 로드 완료 확인
+                if (window.NofeeChatbot && window.NofeeChatbot.chatFlow) {
+                    console.log('✅ 노피 챗봇 초기화 완료');
+                } else {
+                    console.error('❌ 챗봇 초기화 실패');
+                }
+            });
+        });
+
+        // 디버깅 도구
+        window.NofeeChatbotDebug = {
+            checkForm: function() {
+                const forms = document.querySelectorAll('form');
+                console.log('📋 발견된 폼:', forms.length);
+                forms.forEach((form, i) => {
+                    console.log(`폼 ${i}:`, {
+                        name: form.name,
+                        dataName: form.getAttribute('data-name'),
+                        fields: form.querySelectorAll('input').length
+                    });
+                });
+            },
+
+            checkData: function() {
+                if (window.NofeeChatbot && window.NofeeChatbot.state) {
+                    const state = window.NofeeChatbot.state;
+                    console.log('📊 데이터 상태:', {
+                        상품데이터: state.phoneData?.length || 0,
+                        지역데이터: state.regionData?.length || 0,
+                        필터링된데이터: state.filteredData?.length || 0
+                    });
+                } else {
+                    console.log('❌ 챗봇 상태를 찾을 수 없습니다');
+                }
+            },
+
+            testSubmit: function() {
+                const form = document.querySelector('form[data-name="Chat Form"]');
+                if (form) {
+                    console.log('🧪 테스트 제출 시작');
+                    // 테스트 데이터 채우기
+                    const testData = {
+                        name: '테스트',
+                        phone: '01012345678',
+                        model_name: '테스트폰'
+                    };
+
+                    Object.keys(testData).forEach(key => {
+                        const field = form.querySelector(`[name="${key}"]`);
+                        if (field) field.value = testData[key];
+                    });
+
+                    console.log('제출 준비 완료');
+                } else {
+                    console.error('❌ Chat Form을 찾을 수 없습니다');
+                }
+            }
+        };
+    })();
+    </script>
 </body>
 </html>
