@@ -64,11 +64,31 @@
             
             console.log('노피 AI 초기화 시작...');
             
-            this.state.chatContainer = document.getElementById('nofeeChat');
-            if (!this.state.chatContainer) {
-                console.error('채팅 컨테이너를 찾을 수 없습니다');
-                return;
-            }
+            // 컨테이너 찾기 재시도
+            let retries = 0;
+            const maxRetries = 10;
+            
+            const findContainer = () => {
+                this.state.chatContainer = document.getElementById('nofeeChat');
+                if (!this.state.chatContainer && retries < maxRetries) {
+                    retries++;
+                    console.log(`컨테이너 찾기 재시도 중... (${retries}/${maxRetries})`);
+                    setTimeout(findContainer, 500);
+                    return;
+                } else if (!this.state.chatContainer) {
+                    console.error('채팅 컨테이너를 찾을 수 없습니다. ID를 확인해주세요: nofeeChat');
+                    return;
+                }
+                
+                // 컨테이너를 찾았을 때 초기화 계속 진행
+                this.continueInit();
+            };
+            
+            findContainer();
+        },
+        
+        // 초기화 계속
+        continueInit: async function() {
             
             // 세션 ID 생성
             this.state.sessionId = this.utils.generateSessionId();
@@ -761,13 +781,14 @@
         
         // 메시지 추가 함수들
         addBotMessage: async function(text) {
+            const messageId = 'msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
             const messageHTML = `
                 <div class="nofee-message">
                     <div class="nofee-bot-message">
                         <div class="nofee-bot-avatar">🤖</div>
                         <div class="nofee-bot-info">
                             <div class="nofee-bot-name">노피 AI (bot)</div>
-                            <div class="nofee-message-bubble" id="msg-${Date.now()}"></div>
+                            <div class="nofee-message-bubble" id="${messageId}"></div>
                         </div>
                     </div>
                 </div>
@@ -777,7 +798,7 @@
             this.scrollToBottom();
             
             // 타이핑 효과
-            const bubble = this.state.chatContainer.querySelector(`#msg-${Date.now()}`);
+            const bubble = document.getElementById(messageId);
             if (bubble) {
                 await this.typeText(bubble, text);
             }
@@ -808,8 +829,17 @@
         showAIThinking: async function(text = 'AI가 분석 중입니다') {
             const thinking = document.getElementById('aiThinking');
             if (thinking) {
-                thinking.querySelector('.nofee-ai-thinking-text').textContent = text + '...';
+                const textElement = thinking.querySelector('.nofee-ai-thinking-text');
+                if (textElement) {
+                    textElement.textContent = text + '...';
+                }
+                thinking.style.display = 'block';
                 thinking.classList.add('show');
+                
+                // 채팅 영역에 추가
+                if (this.state.chatContainer) {
+                    this.state.chatContainer.appendChild(thinking);
+                }
                 
                 await this.utils.delay(this.config.AI_THINKING_DELAY);
             }
@@ -819,6 +849,12 @@
             const thinking = document.getElementById('aiThinking');
             if (thinking) {
                 thinking.classList.remove('show');
+                thinking.style.display = 'none';
+                // 원래 위치로 되돌리기
+                const wrapper = document.getElementById('nofee-ai-wrapper');
+                if (wrapper && thinking.parentNode !== wrapper) {
+                    wrapper.appendChild(thinking);
+                }
             }
         },
         
@@ -854,6 +890,7 @@
         
         // 입력 필드 표시
         showInputField: function(type, placeholder, callback) {
+            const inputId = 'input-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
             const inputHTML = `
                 <div class="nofee-message">
                     <div class="nofee-input-wrapper">
@@ -861,7 +898,7 @@
                                class="nofee-input-field" 
                                placeholder="${placeholder}"
                                ${type === 'tel' ? 'maxlength="11"' : ''}
-                               id="input-${Date.now()}">
+                               id="${inputId}">
                         <button class="nofee-input-btn">입력</button>
                         ${this.createBackButton()}
                     </div>
@@ -870,7 +907,7 @@
             
             this.state.chatContainer.insertAdjacentHTML('beforeend', inputHTML);
             
-            const input = this.state.chatContainer.querySelector(`#input-${Date.now()}`);
+            const input = document.getElementById(inputId);
             const button = input.parentElement.querySelector('.nofee-input-btn');
             
             // 자동 포커스
@@ -901,10 +938,11 @@
         
         // 선택 필드 표시
         showSelectField: function(options, callback) {
+            const selectId = 'select-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
             const selectHTML = `
                 <div class="nofee-message">
                     <div class="nofee-input-wrapper">
-                        <select class="nofee-input-field" id="select-${Date.now()}">
+                        <select class="nofee-input-field" id="${selectId}">
                             <option value="">선택해주세요</option>
                             ${options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
                         </select>
@@ -915,7 +953,7 @@
             
             this.state.chatContainer.insertAdjacentHTML('beforeend', selectHTML);
             
-            const select = this.state.chatContainer.querySelector(`#select-${Date.now()}`);
+            const select = document.getElementById(selectId);
             
             select.addEventListener('change', async () => {
                 if (select.value) {
@@ -1155,5 +1193,8 @@
         console.error('노피 AI Promise 에러:', e.reason);
         e.preventDefault();
     });
+    
+    // 디버깅용 - 콘솔에서 확인 가능
+    console.log('노피 AI 객체 로드 완료:', window.NofeeAI);
     
 })();
