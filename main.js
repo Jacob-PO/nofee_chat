@@ -1137,6 +1137,8 @@ document.addEventListener('DOMContentLoaded', function() {
         dataManager.loadAllData();
         // expose internal state for debugging
         window.NofeeChatbot.state = state;
+        // expose data manager for debugging
+        window.NofeeChatbot.dataManager = dataManager;
     } else {
         console.error('chatMessages 컨테이너를 찾을 수 없습니다.');
     }
@@ -1149,6 +1151,7 @@ window.NofeeChatbot.formatPrice = formatPrice;
 window.NofeeChatbot.createPhoneListHTML = createPhoneListHTML;
 window.NofeeChatbot.showTypingIndicator = showTypingIndicator;
 window.NofeeChatbot.hideTypingIndicator = hideTypingIndicator;
+window.NofeeChatbot.dataManager = dataManager;
 
 // 편의를 위한 전역 별칭
 window.chatFlow = chatFlow;
