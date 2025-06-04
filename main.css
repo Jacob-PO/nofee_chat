@@ -1,288 +1,817 @@
 /* 노피 AI 챗봇 스타일 - main.css */
 
-/* 기본 스타일 */
+/* ===== 변수 정의 ===== */
+:root {
+    /* 색상 */
+    --nofee-primary: #6366f1;
+    --nofee-primary-light: #818cf8;
+    --nofee-primary-dark: #4f46e5;
+    --nofee-accent: #a78bfa;
+    --nofee-success: #10b981;
+    --nofee-warning: #f59e0b;
+    --nofee-error: #ef4444;
+    
+    /* 배경 */
+    --nofee-bg-primary: #0a0a0a;
+    --nofee-bg-secondary: #111111;
+    --nofee-bg-tertiary: #1a1a1a;
+    --nofee-bg-elevated: rgba(255, 255, 255, 0.05);
+    --nofee-bg-overlay: rgba(0, 0, 0, 0.8);
+    
+    /* 텍스트 */
+    --nofee-text-primary: #ffffff;
+    --nofee-text-secondary: #a1a1aa;
+    --nofee-text-tertiary: #71717a;
+    
+    /* 테두리 */
+    --nofee-border: rgba(255, 255, 255, 0.1);
+    --nofee-border-light: rgba(255, 255, 255, 0.05);
+    
+    /* 그림자 */
+    --nofee-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --nofee-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+    --nofee-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
+    --nofee-shadow-glow: 0 0 20px rgba(99, 102, 241, 0.4);
+    
+    /* 애니메이션 */
+    --nofee-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --nofee-transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== 기본 스타일 ===== */
 #nofee-ai-wrapper * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-#nofee-ai-wrapper {
+.nofee-app {
+    position: fixed;
+    inset: 0;
+    background: var(--nofee-bg-primary);
+    color: var(--nofee-text-primary);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    color: #333;
+    font-size: 16px;
     line-height: 1.5;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-/* 컨테이너 */
-.nofee-chat-container {
-    max-width: 430px;
-    margin: 0 auto;
-    background-color: #ffffff;
-    min-height: 100vh;
+/* ===== 로딩 화면 ===== */
+.nofee-loading-screen {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--nofee-bg-primary);
+    z-index: 9999;
+}
+
+.nofee-loading-content {
+    text-align: center;
+}
+
+.nofee-logo-animation {
     position: relative;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 2rem;
 }
 
-/* 헤더 */
+.nofee-logo-circle {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--nofee-primary), var(--nofee-accent));
+    animation: nofee-rotate 3s linear infinite;
+}
+
+.nofee-logo-pulse {
+    position: absolute;
+    inset: -20px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--nofee-primary) 0%, transparent 70%);
+    opacity: 0.5;
+    animation: nofee-pulse 2s ease-in-out infinite;
+}
+
+.nofee-loading-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--nofee-primary), var(--nofee-accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.nofee-loading-subtitle {
+    color: var(--nofee-text-secondary);
+    font-size: 1rem;
+    margin-bottom: 2rem;
+}
+
+.nofee-loading-progress {
+    width: 200px;
+    height: 2px;
+    background: var(--nofee-bg-tertiary);
+    border-radius: 2px;
+    overflow: hidden;
+    margin: 0 auto;
+}
+
+.nofee-loading-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--nofee-primary), var(--nofee-accent));
+    animation: nofee-loading 1.5s ease-in-out infinite;
+}
+
+/* ===== 메인 인터페이스 ===== */
+.nofee-interface {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    position: relative;
+}
+
+/* 배경 효과 */
+.nofee-bg-effects {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.nofee-gradient-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.3;
+}
+
+.nofee-orb-1 {
+    width: 400px;
+    height: 400px;
+    background: var(--nofee-primary);
+    top: -200px;
+    right: -200px;
+    animation: nofee-float-1 20s ease-in-out infinite;
+}
+
+.nofee-orb-2 {
+    width: 300px;
+    height: 300px;
+    background: var(--nofee-accent);
+    bottom: -150px;
+    left: -150px;
+    animation: nofee-float-2 25s ease-in-out infinite;
+}
+
+.nofee-orb-3 {
+    width: 250px;
+    height: 250px;
+    background: var(--nofee-primary-light);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: nofee-float-3 30s ease-in-out infinite;
+}
+
+/* ===== 헤더 ===== */
 .nofee-header {
-    background-color: #ffffff;
-    padding: 15px 20px;
-    border-bottom: 1px solid #eee;
+    position: relative;
+    z-index: 10;
+    background: rgba(10, 10, 10, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--nofee-border);
+}
+
+.nofee-header-content {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
+    padding: 1rem 1.5rem;
+    max-width: 800px;
+    margin: 0 auto;
 }
 
-.nofee-header-left {
+.nofee-brand {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 0.75rem;
 }
 
-.nofee-back-btn,
-.nofee-menu-btn,
-.nofee-close-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: #5C5CFF;
-    padding: 8px;
-    border-radius: 50%;
-    transition: all 0.3s ease;
-}
-
-.nofee-back-btn:hover,
-.nofee-menu-btn:hover,
-.nofee-close-btn:hover {
-    background-color: #f0f0ff;
-}
-
-.nofee-header-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.nofee-profile-img {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #5C5CFF 0%, #4040FF 100%);
+.nofee-brand-icon {
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
+    background: linear-gradient(135deg, var(--nofee-primary), var(--nofee-accent));
+    border-radius: 8px;
+    color: white;
 }
 
-.nofee-header-text h3 {
-    font-size: 16px;
+.nofee-brand-name {
+    font-size: 1.125rem;
     font-weight: 600;
-    margin-bottom: 2px;
 }
 
-.nofee-header-text p {
-    font-size: 12px;
-    color: #999;
-}
-
-.nofee-header-actions {
+.nofee-icon-btn {
+    width: 40px;
+    height: 40px;
     display: flex;
-    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    background: var(--nofee-bg-elevated);
+    border: 1px solid var(--nofee-border);
+    border-radius: 12px;
+    color: var(--nofee-text-primary);
+    cursor: pointer;
+    transition: var(--nofee-transition);
 }
 
-/* 채팅 영역 */
-.nofee-chat-messages {
-    padding: 20px;
+.nofee-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.05);
+}
+
+/* ===== 메인 콘텐츠 ===== */
+.nofee-main {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+}
+
+.nofee-chat-container {
+    height: 100%;
     overflow-y: auto;
-    height: calc(100vh - 140px);
+    scroll-behavior: smooth;
     padding-bottom: 100px;
 }
 
-/* 인트로 */
-.nofee-intro-section {
-    text-align: center;
-    padding: 30px 20px;
-    margin-bottom: 20px;
+/* 웰컴 화면 */
+.nofee-welcome {
+    min-height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    animation: nofee-fade-in 0.6s ease-out;
 }
 
-.nofee-intro-avatar {
+.nofee-welcome-content {
+    text-align: center;
+    max-width: 500px;
+}
+
+.nofee-ai-avatar {
+    position: relative;
     width: 120px;
     height: 120px;
+    margin: 0 auto 2rem;
+}
+
+.nofee-avatar-glow {
+    position: absolute;
+    inset: -20px;
+    background: radial-gradient(circle, var(--nofee-primary) 0%, transparent 70%);
+    opacity: 0.5;
     border-radius: 50%;
-    margin: 0 auto 20px;
-    background: linear-gradient(135deg, #5C5CFF 0%, #4040FF 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 60px;
-    box-shadow: 0 10px 30px rgba(92, 92, 255, 0.3);
-    animation: float 3s ease-in-out infinite;
+    animation: nofee-pulse 3s ease-in-out infinite;
 }
 
-@keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
-}
-
-.nofee-intro-section h2 {
-    font-size: 24px;
-    margin-bottom: 15px;
-    color: #333;
-}
-
-.nofee-time-badge {
-    display: inline-block;
-    background-color: #f0f0f0;
-    padding: 8px 20px;
-    border-radius: 20px;
-    font-size: 14px;
-    color: #666;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.nofee-time-badge:hover {
-    background-color: #e0e0e0;
-}
-
-/* 운영시간 */
-.nofee-operating-hours {
-    background-color: #f8f8f8;
-    padding: 15px 20px;
-    border-radius: 12px;
-    margin: 0 20px 20px;
-    font-size: 14px;
-    color: #666;
-    line-height: 1.8;
-}
-
-/* 로딩 */
-.nofee-loading {
-    text-align: center;
-    padding: 40px;
-    color: #666;
-}
-
-/* AI 생각중 */
-.nofee-ai-thinking {
-    padding: 20px;
-    text-align: center;
-}
-
-.nofee-ai-dots {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    margin-bottom: 10px;
-}
-
-.nofee-ai-dot {
-    width: 10px;
-    height: 10px;
-    background-color: #5C5CFF;
-    border-radius: 50%;
-    animation: thinking 1.4s ease-in-out infinite;
-}
-
-.nofee-ai-dot:nth-child(1) { animation-delay: -0.32s; }
-.nofee-ai-dot:nth-child(2) { animation-delay: -0.16s; }
-.nofee-ai-dot:nth-child(3) { animation-delay: 0; }
-
-@keyframes thinking {
-    0%, 80%, 100% {
-        transform: scale(0.8);
-        opacity: 0.5;
-    }
-    40% {
-        transform: scale(1.2);
-        opacity: 1;
-    }
-}
-
-.nofee-ai-thinking-text {
-    font-size: 14px;
-    color: #666;
-}
-
-/* 하단 액션 버튼 */
-.nofee-input-area {
-    position: fixed;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
+.nofee-avatar-core {
+    position: relative;
     width: 100%;
-    max-width: 430px;
-    background: white;
-    border-top: 1px solid #eee;
-    padding: 15px;
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-}
-
-.nofee-action-btn {
-    width: 50px;
-    height: 50px;
+    height: 100%;
+    background: linear-gradient(135deg, var(--nofee-primary), var(--nofee-accent));
     border-radius: 50%;
-    background: #5C5CFF;
-    color: white;
-    border: none;
-    font-size: 20px;
-    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s ease;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    color: white;
+    box-shadow: var(--nofee-shadow-glow);
 }
 
-.nofee-action-btn:hover {
-    transform: scale(1.1);
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+.nofee-welcome-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--nofee-text-primary), var(--nofee-text-secondary));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.nofee-welcome-desc {
+    color: var(--nofee-text-secondary);
+    font-size: 1.125rem;
+    margin-bottom: 3rem;
+}
+
+.nofee-feature-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.nofee-feature-card {
+    background: var(--nofee-bg-elevated);
+    border: 1px solid var(--nofee-border);
+    border-radius: 16px;
+    padding: 1.5rem 1rem;
+    transition: var(--nofee-transition);
+    backdrop-filter: blur(10px);
+}
+
+.nofee-feature-card:hover {
+    transform: translateY(-4px);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: var(--nofee-shadow-lg);
+}
+
+.nofee-feature-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+/* 메시지 영역 */
+.nofee-messages {
+    padding: 2rem 1rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* AI 메시지 */
+.nofee-message-ai {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    animation: nofee-slide-in-left 0.4s ease-out;
+}
+
+.nofee-message-avatar {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--nofee-primary), var(--nofee-accent));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+}
+
+.nofee-message-content {
+    flex: 1;
+}
+
+.nofee-message-bubble {
+    background: var(--nofee-bg-elevated);
+    border: 1px solid var(--nofee-border);
+    border-radius: 20px;
+    border-top-left-radius: 4px;
+    padding: 1rem 1.25rem;
+    display: inline-block;
+    max-width: 100%;
+    backdrop-filter: blur(10px);
+    white-space: pre-wrap;
+    line-height: 1.6;
+}
+
+/* 사용자 메시지 */
+.nofee-message-user {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1.5rem;
+    animation: nofee-slide-in-right 0.4s ease-out;
+}
+
+.nofee-message-user .nofee-message-bubble {
+    background: linear-gradient(135deg, var(--nofee-primary), var(--nofee-accent));
+    border: none;
+    border-top-right-radius: 4px;
+    color: white;
+}
+
+/* 버튼 그룹 */
+.nofee-button-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin: 1.5rem 0;
+    animation: nofee-fade-in 0.4s ease-out;
 }
 
 .nofee-option-btn {
-    padding: 12px 24px;
-    border: 2px solid #5C5CFF;
-    background: white;
-    color: #5C5CFF;
-    border-radius: 25px;
-    font-size: 15px;
+    padding: 0.75rem 1.5rem;
+    background: var(--nofee-bg-elevated);
+    border: 1px solid var(--nofee-border);
+    border-radius: 24px;
+    color: var(--nofee-text-primary);
+    font-size: 0.9375rem;
+    font-weight: 500;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: var(--nofee-transition);
+    backdrop-filter: blur(10px);
 }
 
-.nofee-option-btn:hover,
-.nofee-option-btn:active {
-    background: #5C5CFF;
+.nofee-option-btn:hover {
+    background: var(--nofee-primary);
+    border-color: var(--nofee-primary);
+    transform: scale(1.05);
+    box-shadow: var(--nofee-shadow-glow);
+}
+
+/* 입력 필드 */
+.nofee-input-group {
+    display: flex;
+    gap: 0.75rem;
+    margin: 1.5rem 0;
+    animation: nofee-fade-in 0.4s ease-out;
+}
+
+.nofee-input {
+    flex: 1;
+    padding: 0.875rem 1.25rem;
+    background: var(--nofee-bg-elevated);
+    border: 1px solid var(--nofee-border);
+    border-radius: 24px;
+    color: var(--nofee-text-primary);
+    font-size: 1rem;
+    transition: var(--nofee-transition);
+}
+
+.nofee-input:focus {
+    outline: none;
+    border-color: var(--nofee-primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.nofee-input-btn {
+    padding: 0.875rem 1.5rem;
+    background: linear-gradient(135deg, var(--nofee-primary), var(--nofee-accent));
+    border: none;
+    border-radius: 24px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--nofee-transition);
+}
+
+.nofee-input-btn:hover {
+    transform: scale(1.05);
+    box-shadow: var(--nofee-shadow-glow);
+}
+
+/* 선택 필드 */
+.nofee-select {
+    width: 100%;
+    padding: 0.875rem 1.25rem;
+    background: var(--nofee-bg-elevated);
+    border: 1px solid var(--nofee-border);
+    border-radius: 16px;
+    color: var(--nofee-text-primary);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: var(--nofee-transition);
+    margin: 1rem 0;
+}
+
+/* 상품 카드 */
+.nofee-product-card {
+    background: var(--nofee-bg-elevated);
+    border: 1px solid var(--nofee-border);
+    border-radius: 20px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    cursor: pointer;
+    transition: var(--nofee-transition);
+    backdrop-filter: blur(10px);
+}
+
+.nofee-product-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--nofee-primary);
+    box-shadow: var(--nofee-shadow-lg);
+}
+
+.nofee-product-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.nofee-product-details {
+    color: var(--nofee-text-secondary);
+    font-size: 0.875rem;
+    margin-bottom: 0.75rem;
+}
+
+.nofee-product-price {
+    font-size: 1.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--nofee-primary), var(--nofee-accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.nofee-product-discount {
+    color: var(--nofee-success);
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+/* 타이핑 인디케이터 */
+.nofee-typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 2rem;
+    margin-bottom: 1rem;
+    animation: nofee-fade-in 0.3s ease-out;
+}
+
+.nofee-typing-avatar {
+    width: 24px;
+    height: 24px;
+    background: linear-gradient(135deg, var(--nofee-primary), var(--nofee-accent));
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: white;
 }
 
-.nofee-home-btn {
-    background: white;
-    border: 2px solid #eee;
-    color: #333;
+.nofee-typing-dots {
+    display: flex;
+    gap: 4px;
+    padding: 0.5rem 1rem;
+    background: var(--nofee-bg-elevated);
+    border-radius: 20px;
 }
 
-/* 동의 정보 */
-.nofee-consent-info {
-    background: #f8f8f8;
-    padding: 15px;
-    border-radius: 10px;
-    margin-bottom: 15px;
+.nofee-typing-dots span {
+    width: 8px;
+    height: 8px;
+    background: var(--nofee-text-tertiary);
+    border-radius: 50%;
+    animation: nofee-typing 1.4s ease-in-out infinite;
 }
 
-/* 반응형 */
-@media (max-width: 480px) {
-    .nofee-chat-container {
-        max-width: 100%;
-        box-shadow: none;
+.nofee-typing-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.nofee-typing-dots span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+/* ===== 하단 액션 바 ===== */
+.nofee-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(10, 10, 10, 0.9);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--nofee-border);
+    z-index: 10;
+}
+
+.nofee-quick-actions {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.nofee-quick-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.75rem;
+    background: var(--nofee-bg-elevated);
+    border: 1px solid var(--nofee-border);
+    border-radius: 16px;
+    color: var(--nofee-text-secondary);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: var(--nofee-transition);
+}
+
+.nofee-quick-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--nofee-text-primary);
+}
+
+.nofee-quick-primary {
+    background: linear-gradient(135deg, var(--nofee-primary), var(--nofee-accent));
+    border: none;
+    color: white;
+}
+
+.nofee-quick-primary:hover {
+    transform: scale(1.05);
+    box-shadow: var(--nofee-shadow-glow);
+}
+
+/* ===== 메뉴 오버레이 ===== */
+.nofee-menu-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--nofee-bg-overlay);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    align-items: flex-end;
+    z-index: 100;
+    animation: nofee-fade-in 0.3s ease-out;
+}
+
+.nofee-menu-content {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    background: var(--nofee-bg-secondary);
+    border-radius: 24px 24px 0 0;
+    padding: 2rem;
+    animation: nofee-slide-up 0.3s ease-out;
+}
+
+.nofee-menu-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+}
+
+.nofee-menu-header h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.nofee-menu-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.nofee-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--nofee-bg-elevated);
+    border-radius: 16px;
+    color: var(--nofee-text-primary);
+    text-decoration: none;
+    transition: var(--nofee-transition);
+}
+
+.nofee-menu-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(4px);
+}
+
+/* ===== 동의 정보 ===== */
+.nofee-consent-box {
+    background: var(--nofee-bg-elevated);
+    border: 1px solid var(--nofee-border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    backdrop-filter: blur(10px);
+}
+
+.nofee-consent-box a {
+    color: var(--nofee-primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.nofee-consent-box a:hover {
+    text-decoration: underline;
+}
+
+.nofee-consent-details {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--nofee-border);
+    font-size: 0.875rem;
+    color: var(--nofee-text-secondary);
+    line-height: 1.6;
+}
+
+/* ===== 애니메이션 ===== */
+@keyframes nofee-rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes nofee-pulse {
+    0%, 100% { opacity: 0.5; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.1); }
+}
+
+@keyframes nofee-loading {
+    0% { transform: translateX(-100%); }
+    50% { transform: translateX(0); }
+    100% { transform: translateX(200%); }
+}
+
+@keyframes nofee-float-1 {
+    0%, 100% { transform: translate(0, 0); }
+    25% { transform: translate(-50px, 30px); }
+    50% { transform: translate(30px, -40px); }
+    75% { transform: translate(-30px, -20px); }
+}
+
+@keyframes nofee-float-2 {
+    0%, 100% { transform: translate(0, 0); }
+    33% { transform: translate(40px, -30px); }
+    66% { transform: translate(-30px, 40px); }
+}
+
+@keyframes nofee-float-3 {
+    0%, 100% { transform: translate(-50%, -50%); }
+    25% { transform: translate(-45%, -55%); }
+    50% { transform: translate(-55%, -45%); }
+    75% { transform: translate(-45%, -50%); }
+}
+
+@keyframes nofee-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes nofee-slide-up {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+@keyframes nofee-slide-in-left {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes nofee-slide-in-right {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes nofee-typing {
+    0%, 60%, 100% { opacity: 0.2; transform: scale(0.8); }
+    30% { opacity: 1; transform: scale(1.2); }
+}
+
+/* ===== 반응형 ===== */
+@media (max-width: 640px) {
+    .nofee-welcome-title {
+        font-size: 1.5rem;
     }
     
-    .nofee-input-area {
-        max-width: 100%;
+    .nofee-feature-cards {
+        grid-template-columns: 1fr;
     }
+    
+    .nofee-messages {
+        padding: 1.5rem 1rem;
+    }
+    
+    .nofee-quick-actions {
+        padding: 0.75rem 1rem;
+    }
+    
+    .nofee-quick-btn {
+        padding: 0.5rem;
+        font-size: 0.6875rem;
+    }
+}
+
+/* ===== 스크롤바 스타일 ===== */
+.nofee-chat-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.nofee-chat-container::-webkit-scrollbar-track {
+    background: var(--nofee-bg-secondary);
+}
+
+.nofee-chat-container::-webkit-scrollbar-thumb {
+    background: var(--nofee-bg-tertiary);
+    border-radius: 4px;
+}
+
+.nofee-chat-container::-webkit-scrollbar-thumb:hover {
+    background: var(--nofee-text-tertiary);
 }
