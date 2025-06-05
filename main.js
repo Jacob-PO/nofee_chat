@@ -37,7 +37,8 @@ window.NofeeAI = {
         selectedProduct: null,
         sessionId: 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
         messageHistory: [],
-        recommendationScore: {}
+        recommendationScore: {},
+        urlParams: {} // URL 파라미터 저장
     },
     
     // 설정
@@ -77,6 +78,10 @@ window.NofeeAI = {
             return;
         }
         
+        // URL 파라미터 저장
+        this.state.urlParams = this.urlParams || {};
+        console.log('URL 파라미터:', this.state.urlParams);
+        
         // DOM 요소 찾기
         this.state.chatContainer = document.getElementById('nofeeChat');
         this.state.messagesContainer = document.getElementById('nofeeMessages');
@@ -96,7 +101,7 @@ window.NofeeAI = {
             const loading = document.getElementById('nofeeLoading');
             const intro = document.getElementById('nofeeIntro');
             if (loading) loading.style.display = 'none';
-            if (intro) intro.style.display = 'block';
+            if (intro) intro.style.display = 'flex';
             
             this.state.initialized = true;
             console.log('노피 AI 초기화 완료');
@@ -377,11 +382,12 @@ window.NofeeAI = {
         
         // 상품 카드 HTML
         const cards = displayPhones.map((phone, index) => `
-            <div class="nofee-product-card" onclick="window.NofeeAI.selectPhone(${index})">
-                <h4 class="nofee-product-title">${phone.model}</h4>
-                <p class="nofee-product-details">${phone.activation} · ${phone.carrier} · ${phone.contract}</p>
-                <p class="nofee-product-price">월 ${this.formatPrice(phone.total)}원</p>
-                ${phone.hasExtraDiscount ? `<p class="nofee-product-discount">🎉 ${this.formatPrice(phone.extraDiscountAmount)}원 추가 할인!</p>` : ''}
+            <div class="product-card" onclick="window.NofeeAI.selectPhone(${index})">
+                ${phone.hasExtraDiscount ? '<div class="product-badge">특가</div>' : ''}
+                <h4 class="product-title">${phone.model}</h4>
+                <p class="product-details">${phone.activation} · ${phone.carrier} · ${phone.contract}</p>
+                <p class="product-price">월 ${this.formatPrice(phone.total)}원</p>
+                ${phone.hasExtraDiscount ? `<p class="product-discount">🎉 ${this.formatPrice(phone.extraDiscountAmount)}원 추가 할인!</p>` : ''}
             </div>
         `).join('');
         
@@ -486,10 +492,10 @@ window.NofeeAI = {
         await this.addBotMessage('마지막으로 개인정보 수집·이용에 동의해주세요.');
         
         const consentDiv = document.createElement('div');
-        consentDiv.className = 'nofee-consent-box';
+        consentDiv.className = 'consent-box';
         consentDiv.innerHTML = `
-            <a href="https://nofee.team/policy" target="_blank">📄 개인정보 처리방침 확인하기</a>
-            <div class="nofee-consent-details">
+            <a href="https://nofee.team/policy" target="_blank" class="consent-link">📄 개인정보 처리방침 확인하기</a>
+            <div class="consent-details">
                 <strong>수집 항목:</strong> 성명, 휴대폰 번호, 지역<br>
                 <strong>수집 목적:</strong> 휴대폰 구매 상담 및 계약 진행<br>
                 <strong>보유기간:</strong> 서비스 제공 완료 후 1년
@@ -544,42 +550,82 @@ window.NofeeAI = {
         }
     },
     
-    // 폼 데이터 채우기
+    // 폼 데이터 채우기 (상품의 모든 정보 포함)
     fillFormData: function() {
-        const fields = {
+        const product = this.state.selectedProduct;
+        
+        // 고객 정보
+        const customerFields = {
             customer_name: this.state.userData.name,
             customer_phone: this.state.userData.phone,
             customer_region: this.state.userData.region,
-            customer_district: this.state.userData.district,
-            phone_model: this.state.selectedProduct.model,
-            phone_carrier: this.state.selectedProduct.carrier,
-            phone_price: this.state.selectedProduct.devicePrice,
-            monthly_payment: this.state.selectedProduct.total,
-            contract_type: this.state.selectedProduct.contract,
-            activation_type: this.state.selectedProduct.activation,
-            timestamp: new Date().toISOString(),
-            session_id: this.state.sessionId
+            customer_district: this.state.userData.district
         };
         
-        Object.entries(fields).forEach(([key, value]) => {
+        // 상품 정보
+        const productFields = {
+            phone_model: product.model || product.Model,
+            phone_brand: product.Brand,
+            phone_storage: product.storage || product.Storage,
+            phone_carrier: product.carrier || product.Carrier,
+            activation_type: product.activation || product['Activation Type'],
+            contract_type: product.contract || product['Contract Type'],
+            retail_price: product.devicePrice || product['Retail Price'],
+            monthly_device_fee: product.deviceDiscount || product['Monthly Device Fee'],
+            monthly_plan_fee: product.planFee || product['Monthly Plan Fee'],
+            total_monthly_payment: product.total || product['Total Monthly Payment'],
+            extra_discount: product.extraDiscountAmount || 0,
+            product_code: product.code || product.id || '',
+            plan_name: product.planName || product['Plan Name'] || '',
+            plan_data: product.planData || product['Plan Data'] || '',
+            plan_voice: product.planVoice || product['Plan Voice'] || '',
+            plan_sms: product.planSms || product['Plan SMS'] || ''
+        };
+        
+        // 메타 정보
+        const metaFields = {
+            timestamp: new Date().toISOString(),
+            session_id: this.state.sessionId,
+            product_json: JSON.stringify(product) // 전체 상품 정보를 JSON으로
+        };
+        
+        // 모든 필드 채우기
+        const allFields = {...customerFields, ...productFields, ...metaFields};
+        
+        Object.entries(allFields).forEach(([key, value]) => {
             const field = document.getElementById(key);
-            if (field) field.value = value || '';
+            if (field) {
+                field.value = value || '';
+            }
         });
+        
+        console.log('폼 데이터 채움:', allFields);
     },
     
     // 폼 제출
     submitForm: function() {
-        const form = document.getElementById('nofee-purchase-form');
+        const form = document.getElementById('nofee-form') || document.getElementById('nofee-purchase-form');
         const consentField = document.getElementById('privacy_consent');
         
         if (form && consentField && consentField.value === '동의함') {
             console.log('폼 제출 시작');
-            const submitBtn = form.querySelector('input[type="submit"]');
-            if (submitBtn) {
-                submitBtn.click();
-            } else {
-                // submit 버튼이 없으면 form.submit() 사용
+            
+            // 제출 전 최종 데이터 확인
+            const formData = new FormData(form);
+            console.log('제출 데이터:');
+            for (let [key, value] of formData.entries()) {
+                console.log(`${key}: ${value}`);
+            }
+            
+            // 폼 제출
+            try {
                 form.submit();
+            } catch (e) {
+                // submit() 메서드가 없는 경우 버튼 클릭
+                const submitBtn = form.querySelector('input[type="submit"], button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.click();
+                }
             }
         } else {
             console.error('개인정보 동의가 필요합니다.');
@@ -589,16 +635,16 @@ window.NofeeAI = {
     // 메시지 추가
     addBotMessage: async function(text) {
         const msgDiv = document.createElement('div');
-        msgDiv.className = 'chat-bot';
+        msgDiv.className = 'msg-ai';
         msgDiv.innerHTML = `
-            <div class="avatar-bot">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <div class="ai-avatar">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 2L2 7L12 12L22 7L12 2Z"/>
                     <path d="M2 17L12 22L22 17"/>
                     <path d="M2 12L12 17L22 12"/>
                 </svg>
             </div>
-            <div class="bubble" id="msg-${Date.now()}"></div>
+            <div class="msg-bubble" id="msg-${Date.now()}"></div>
         `;
         
         // 메시지를 아래에 추가
@@ -620,8 +666,8 @@ window.NofeeAI = {
     
     addUserMessage: async function(text) {
         const msgDiv = document.createElement('div');
-        msgDiv.className = 'chat-user';
-        msgDiv.innerHTML = `<div class="bubble">${text}</div>`;
+        msgDiv.className = 'msg-user';
+        msgDiv.innerHTML = `<div class="msg-bubble">${text}</div>`;
         
         // 메시지를 아래에 추가
         if (this.state.messagesContainer) {
@@ -634,12 +680,12 @@ window.NofeeAI = {
     // 버튼 표시
     showButtons: function(options, callback) {
         const btnDiv = document.createElement('div');
-        btnDiv.className = 'nofee-button-group';
+        btnDiv.className = 'btn-group';
 
         options.forEach(option => {
             const btn = document.createElement('button');
             btn.textContent = option;
-            btn.className = 'nofee-option-btn';
+            btn.className = 'opt-btn';
             btn.onclick = () => {
                 btnDiv.remove();
                 callback(option);
@@ -657,7 +703,7 @@ window.NofeeAI = {
     // 입력 필드
     showInput: function(type, placeholder, callback) {
         const inputDiv = document.createElement('div');
-        inputDiv.className = 'nofee-input-group';
+        inputDiv.className = 'input-group';
         
         const input = document.createElement('input');
         input.type = type;
@@ -666,7 +712,7 @@ window.NofeeAI = {
         
         const btn = document.createElement('button');
         btn.textContent = '입력완료';
-        btn.className = 'nofee-input-btn';
+        btn.className = 'input-btn';
         
         btn.onclick = () => {
             const value = input.value.trim();
@@ -755,17 +801,57 @@ window.NofeeAI = {
         
         // 인트로 화면 표시
         const intro = document.getElementById('nofeeIntro');
-        if (intro) intro.style.display = 'block';
+        if (intro) intro.style.display = 'flex';
     },
     
-    // 휴대폰 목록 표시 (제거)
-    showPhoneList: async function() {
-        // 기능 제거
-    },
-    
-    // 배송 정보 (제거)
-    showDeliveryInfo: async function() {
-        // 기능 제거
+    // URL 파라미터로 상품 선택
+    selectProductByParam: async function(productParam) {
+        console.log('파라미터로 상품 선택:', productParam);
+        
+        // 상품 찾기
+        const product = this.state.phoneData.find(p => 
+            p.model === productParam || 
+            p.Model === productParam ||
+            p.model.toLowerCase().includes(productParam.toLowerCase())
+        );
+        
+        if (product) {
+            // 인트로 숨기고 바로 시작
+            const intro = document.getElementById('nofeeIntro');
+            if (intro) intro.style.display = 'none';
+            
+            // 메시지 컨테이너 표시
+            if (!this.state.messagesContainer) {
+                this.state.messagesContainer = document.getElementById('nofeeMessages');
+            }
+            if (this.state.messagesContainer) {
+                this.state.messagesContainer.style.display = 'block';
+                this.state.messagesContainer.innerHTML = '';
+            }
+            
+            // 선택된 상품 설정
+            this.state.selectedProduct = product;
+            
+            // 바로 구매 프로세스 시작
+            await this.addBotMessage(`${product.model}을(를) 선택하셨네요! 👍`);
+            await this.delay(500);
+            
+            let msg = `📱 ${product.model} (${product.storage})\n`;
+            msg += `📝 ${product.activation} · ${product.carrier} · ${product.contract}\n`;
+            msg += `💰 월 ${this.formatPrice(product.total)}원`;
+            if (product.hasExtraDiscount) {
+                msg += ` (추가 할인 ${this.formatPrice(product.extraDiscountAmount)}원 적용)`;
+            }
+            
+            await this.addBotMessage(msg);
+            await this.delay(500);
+            
+            // 바로 신청 프로세스 시작
+            this.startPurchase();
+        } else {
+            // 상품을 찾지 못한 경우 일반 상담 시작
+            this.startConsultation();
+        }
     },
     
     // 에러 표시
