@@ -483,6 +483,60 @@
     <input type="hidden" name="product_json" id="product_json">
   </form>
 
-  <!-- main.js 로드 -->
-  <script src="main.js"></script>
+  <!-- ─────────── main.js 로드 (GitHub Raw → 실패 시 GitHub CDN) ─────────── -->
+  <script>
+    // 전역 객체로 노출
+    window.NofeeAI = window.NofeeAI || {};
+
+    // CORS 및 캐시 설정
+    window.NofeeAI.fetchOptions = {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' },
+      cache: 'no-cache'
+    };
+
+    // main.js 로드 (GitHub Raw URL 우선 → 실패 시 GitHub CDN)
+    ;(function() {
+      let scriptLoaded = false;
+
+      function loadScript(url, isBackup) {
+        if (scriptLoaded) return;
+        const script = document.createElement('script');
+        script.src = url + '?v=' + Date.now();
+        script.async = true;
+
+        script.onload = function() {
+          scriptLoaded = true;
+          console.log('Nofee AI 스크립트 로드 완료' + (isBackup ? ' (백업)' : ''));
+          if (window.NofeeAI && typeof window.NofeeAI.init === 'function') {
+            setTimeout(() => window.NofeeAI.init(), 100);
+          }
+        };
+
+        script.onerror = function() {
+          console.error('Nofee AI 스크립트 로드 실패:', url);
+          if (!isBackup) {
+            // GitHub Raw가 실패하면 GitHub CDN으로 재시도
+            setTimeout(() => {
+              const cdnUrl = 'https://gitcdn.link/repo/Jacob-PO/nofee_chat/main/main.js';
+              loadScript(cdnUrl, true);
+            }, 500);
+          } else {
+            // 모든 시도 실패 시 에러 메시지 출력
+            const container = document.getElementById('nofee-chat-container');
+            if (container) {
+              container.innerHTML =
+                '<div style="padding:20px; text-align:center; color:#666;">챗봇을 불러올 수 없습니다. 페이지를 새로고침해주세요.</div>';
+            }
+          }
+        };
+
+        document.head.appendChild(script);
+      }
+
+      // 먼저 GitHub Raw에서 불러오기
+      const rawUrl = 'https://raw.githubusercontent.com/Jacob-PO/nofee_chat/main/main.js';
+      loadScript(rawUrl, false);
+    })();
+  </script>
 </div>
