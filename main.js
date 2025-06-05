@@ -1,4 +1,11 @@
-// 노피 AI 챗봇 - main.js (새로운 디자인 버전)
+// 초기화
+    init: async function() {
+        console.log('노피 AI init 함수 호출됨');
+        
+        if (this.state.initialized) {
+            console.log('이미 초기화됨');
+            return;
+        }// 노피 AI 챗봇 - main.js (새로운 디자인 버전)
 // 즉시 window 객체에 등록
 
 console.log('노피 AI 스크립트 실행 시작');
@@ -72,6 +79,7 @@ window.NofeeAI = {
         
         // DOM 요소 찾기
         this.state.chatContainer = document.getElementById('nofeeChat');
+        this.state.messagesContainer = document.getElementById('nofeeMessages');
         
         if (!this.state.chatContainer) {
             console.error('nofeeChat 컨테이너를 찾을 수 없습니다');
@@ -88,7 +96,7 @@ window.NofeeAI = {
             const loading = document.getElementById('nofeeLoading');
             const intro = document.getElementById('nofeeIntro');
             if (loading) loading.style.display = 'none';
-            if (intro) intro.style.display = 'flex';
+            if (intro) intro.style.display = 'block';
             
             this.state.initialized = true;
             console.log('노피 AI 초기화 완료');
@@ -180,15 +188,20 @@ window.NofeeAI = {
     
     // 상담 시작
     startConsultation: async function() {
+        console.log('상담 시작');
+        
         // 인트로 화면 숨기기
         const intro = document.getElementById('nofeeIntro');
         if (intro) intro.style.display = 'none';
         
-        // 메시지 컨테이너 생성
+        // 메시지 컨테이너 표시
         if (!this.state.messagesContainer) {
-            this.state.messagesContainer = document.createElement('div');
-            this.state.messagesContainer.className = 'nofee-messages-inner';
-            this.state.chatContainer.appendChild(this.state.messagesContainer);
+            this.state.messagesContainer = document.getElementById('nofeeMessages');
+        }
+        
+        if (this.state.messagesContainer) {
+            this.state.messagesContainer.style.display = 'block';
+            this.state.messagesContainer.innerHTML = ''; // 초기화
         }
         
         // 인사 메시지
@@ -374,11 +387,12 @@ window.NofeeAI = {
         
         const wrapper = document.createElement('div');
         wrapper.innerHTML = cards;
-        wrapper.style.animation = 'nofee-fade-in 0.4s ease-out';
         
-        // 상품 카드를 맨 위에 추가 (prepend)
-        this.state.messagesContainer.prepend(wrapper);
-        this.scrollToTop();
+        // 상품 카드를 아래에 추가
+        if (this.state.messagesContainer) {
+            this.state.messagesContainer.appendChild(wrapper);
+        }
+        this.scrollToBottom();
     },
     
     // 휴대폰 선택
@@ -482,8 +496,10 @@ window.NofeeAI = {
             </div>
         `;
         
-        // 동의 박스를 맨 위에 추가 (prepend)
-        this.state.messagesContainer.prepend(consentDiv);
+        // 동의 박스를 아래에 추가
+        if (this.state.messagesContainer) {
+            this.state.messagesContainer.appendChild(consentDiv);
+        }
         
         this.showButtons(['동의합니다', '동의하지 않습니다'], (selected) => {
             this.handleConsent(selected === '동의합니다');
@@ -585,17 +601,21 @@ window.NofeeAI = {
             <div class="bubble" id="msg-${Date.now()}"></div>
         `;
         
-        // 메시지를 맨 위에 추가 (prepend)
-        this.state.messagesContainer.prepend(msgDiv);
+        // 메시지를 아래에 추가
+        if (this.state.messagesContainer) {
+            this.state.messagesContainer.appendChild(msgDiv);
+        }
         
         // 타이핑 효과
         const bubble = msgDiv.querySelector('[id^="msg-"]');
-        for (let i = 0; i < text.length; i++) {
-            bubble.textContent += text[i];
-            await this.delay(this.config.TYPING_SPEED);
+        if (bubble) {
+            for (let i = 0; i < text.length; i++) {
+                bubble.textContent += text[i];
+                await this.delay(this.config.TYPING_SPEED);
+            }
         }
         
-        this.scrollToTop();
+        this.scrollToBottom();
     },
     
     addUserMessage: async function(text) {
@@ -603,9 +623,11 @@ window.NofeeAI = {
         msgDiv.className = 'chat-user';
         msgDiv.innerHTML = `<div class="bubble">${text}</div>`;
         
-        // 메시지를 맨 위에 추가 (prepend)
-        this.state.messagesContainer.prepend(msgDiv);
-        this.scrollToTop();
+        // 메시지를 아래에 추가
+        if (this.state.messagesContainer) {
+            this.state.messagesContainer.appendChild(msgDiv);
+        }
+        this.scrollToBottom();
         await this.delay(300);
     },
     
@@ -625,9 +647,11 @@ window.NofeeAI = {
             btnDiv.appendChild(btn);
         });
         
-        // 버튼을 맨 위에 추가 (prepend)
-        this.state.messagesContainer.prepend(btnDiv);
-        this.scrollToTop();
+        // 버튼을 아래에 추가
+        if (this.state.messagesContainer) {
+            this.state.messagesContainer.appendChild(btnDiv);
+        }
+        this.scrollToBottom();
     },
     
     // 입력 필드
@@ -661,17 +685,18 @@ window.NofeeAI = {
         inputDiv.appendChild(input);
         inputDiv.appendChild(btn);
         
-        // 입력 필드를 맨 위에 추가 (prepend)
-        this.state.messagesContainer.prepend(inputDiv);
+        // 입력 필드를 아래에 추가
+        if (this.state.messagesContainer) {
+            this.state.messagesContainer.appendChild(inputDiv);
+        }
         
         input.focus();
-        this.scrollToTop();
+        this.scrollToBottom();
     },
     
     // 선택 필드
     showSelect: function(options, callback) {
         const selectDiv = document.createElement('div');
-        selectDiv.style.animation = 'nofee-fade-in 0.4s ease-out';
         
         const select = document.createElement('select');
         select.className = 'nofee-select';
@@ -687,9 +712,11 @@ window.NofeeAI = {
         
         selectDiv.appendChild(select);
         
-        // 선택 필드를 맨 위에 추가 (prepend)
-        this.state.messagesContainer.prepend(selectDiv);
-        this.scrollToTop();
+        // 선택 필드를 아래에 추가
+        if (this.state.messagesContainer) {
+            this.state.messagesContainer.appendChild(selectDiv);
+        }
+        this.scrollToBottom();
     },
     
     // AI 생각중
@@ -722,24 +749,23 @@ window.NofeeAI = {
         
         // 메시지 컨테이너 초기화
         if (this.state.messagesContainer) {
-            this.state.messagesContainer.remove();
-            this.state.messagesContainer = null;
+            this.state.messagesContainer.innerHTML = '';
+            this.state.messagesContainer.style.display = 'none';
         }
         
         // 인트로 화면 표시
         const intro = document.getElementById('nofeeIntro');
-        if (intro) intro.style.display = 'flex';
+        if (intro) intro.style.display = 'block';
     },
     
-    // 휴대폰 목록 표시
+    // 휴대폰 목록 표시 (제거)
     showPhoneList: async function() {
-        this.resetChat();
-        this.startConsultation();
+        // 기능 제거
     },
     
-    // 배송 정보
+    // 배송 정보 (제거)
     showDeliveryInfo: async function() {
-        await this.addBotMessage('📦 전국 무료배송!\n\n✅ 주문 후 1-2일 내 수령\n✅ 안전 포장 배송\n✅ 실시간 배송 추적 가능');
+        // 기능 제거
     },
     
     // 에러 표시
@@ -749,7 +775,7 @@ window.NofeeAI = {
         errorDiv.textContent = message;
         
         if (this.state.messagesContainer) {
-            this.state.messagesContainer.prepend(errorDiv);
+            this.state.messagesContainer.appendChild(errorDiv);
         } else if (this.state.chatContainer) {
             this.state.chatContainer.appendChild(errorDiv);
         }
@@ -762,10 +788,10 @@ window.NofeeAI = {
         return Number(value).toLocaleString();
     },
     
-    scrollToTop: function() {
+    scrollToBottom: function() {
         if (this.state.chatContainer) {
             this.state.chatContainer.scrollTo({
-                top: 0,
+                top: this.state.chatContainer.scrollHeight,
                 behavior: 'smooth'
             });
         }
