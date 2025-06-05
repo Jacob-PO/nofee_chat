@@ -1,11 +1,10 @@
-<!-- Nofee AI – 전체화면 최적화 버전 -->
-<div id='nofee-ai-wrapper' class='ai-theme'>
+<!-- Nofee AI – 안정화 버전 -->
+<div id='nofee-ai-wrapper'>
   <!-- CSS 로드 -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Jacob-PO/nofee_chat@main/main.css">
   
-  <!-- 대체 CSS (CDN 실패 시) -->
+  <!-- 폴백 스타일 -->
   <style>
-    /* 최소한의 폴백 스타일 */
     #nofee-ai-wrapper {
       position: fixed;
       top: 0;
@@ -19,9 +18,20 @@
       width: 100%;
       height: 100%;
       background: #f9faff;
-      position: relative;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
+    }
+    .nofee-header {
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 16px 20px;
+      flex-shrink: 0;
+    }
+    .nofee-chat-wrapper {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
     }
     .nofee-loading {
       text-align: center;
@@ -30,7 +40,7 @@
     }
   </style>
 
-  <!-- ==========  구조  ========== -->
+  <!-- 메인 컨테이너 -->
   <div class='nofee-chat-container'>
     <!-- 헤더 -->
     <div class='nofee-header'>
@@ -48,89 +58,55 @@
             <p>최저가 휴대폰 추천 서비스</p>
           </div>
         </div>
-        <button class='nofee-close-btn' onclick='window.NofeeAI?.minimizeChat?.() || window.close()' aria-label='최소화'>
-          <svg width='20' height='20' viewBox='0 0 24 24' fill='none'>
-            <path d='M19 9l-7 7-7-7' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/>
-          </svg>
-        </button>
       </div>
     </div>
 
-    <!-- 메시지 영역 -->
-    <div class='nofee-chat-wrapper'>
-      <div class='nofee-chat-messages' id='nofeeChat'>
-        <div class='nofee-loading' id='nofeeLoading'>
-          <div class='nofee-loading-spinner'></div>
-          <p>AI를 준비하고 있습니다...</p>
-          <small>잠시만 기다려주세요</small>
-        </div>
-        
-        <div class='nofee-intro-section' id='nofeeIntro' style='display:none'>
-          <div class='nofee-intro-content'>
-            <div class='nofee-intro-avatar'>
-              <svg width='60' height='60' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='1.5'>
-                <path d='M12 2L2 7L12 12L22 7L12 2Z'/>
-                <path d='M2 17L12 22L22 17'/>
-                <path d='M2 12L12 17L22 12'/>
-              </svg>
-            </div>
-            <h2>안녕하세요! 👋</h2>
-            <p>최적의 휴대폰을 찾아드리는<br>노피 AI입니다</p>
-            <div class='nofee-feature-pills'>
-              <span class='pill'>🎯 맞춤 추천</span>
-              <span class='pill'>💰 수수료 NO</span>
-              <span class='pill'>⚡ 빠른 상담</span>
-            </div>
-            <button class='nofee-start-btn' onclick='window.NofeeAI?.startConsultation?.()'>
-              AI 상담 시작하기
-            </button>
+    <!-- 채팅 영역 -->
+    <div class='nofee-chat-wrapper' id='nofeeChat'>
+      <!-- 로딩 -->
+      <div class='nofee-loading' id='nofeeLoading'>
+        <div class='nofee-loading-spinner'></div>
+        <p>AI를 준비하고 있습니다...</p>
+        <small>잠시만 기다려주세요</small>
+      </div>
+      
+      <!-- 인트로 -->
+      <div class='nofee-intro-section' id='nofeeIntro' style='display:none'>
+        <div class='nofee-intro-content'>
+          <div class='nofee-intro-avatar'>
+            <svg width='60' height='60' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='1.5'>
+              <path d='M12 2L2 7L12 12L22 7L12 2Z'/>
+              <path d='M2 17L12 22L22 17'/>
+              <path d='M2 12L12 17L22 12'/>
+            </svg>
           </div>
+          <h2>안녕하세요! 👋</h2>
+          <p>최적의 휴대폰을 찾아드리는<br>노피 AI입니다</p>
+          <button class='nofee-start-btn' id='startConsultBtn'>
+            AI 상담 시작하기
+          </button>
         </div>
       </div>
-
-      <!-- AI 생각중 (고정 위치) -->
-      <div class='nofee-ai-thinking' id='aiThinking' style='display:none'>
-        <div class='nofee-thinking-content'>
-          <div class='nofee-ai-dots'>
-            <div class='nofee-ai-dot'></div>
-            <div class='nofee-ai-dot'></div>
-            <div class='nofee-ai-dot'></div>
-          </div>
-          <span class='nofee-ai-thinking-text'>AI가 분석 중입니다...</span>
-        </div>
-      </div>
+      
+      <!-- 메시지 컨테이너 -->
+      <div class='nofee-messages-container' id='nofeeMessages' style='display:none'></div>
     </div>
 
-    <!-- 하단 네비게이션 -->
-    <div class='nofee-bottom-nav'>
-      <a href='https://nofee.team/' class='nofee-nav-btn' target='_blank' rel='noopener'>
-        <svg width='20' height='20' viewBox='0 0 24 24' fill='none'>
-          <path d='M3 9L12 2L21 9V20C21 21.1 20.1 22 19 22H5C3.9 22 3 21.1 3 20V9Z' stroke='currentColor' stroke-width='2'/>
-          <path d='M9 22V12H15V22' stroke='currentColor' stroke-width='2'/>
-        </svg>
-        <span>홈</span>
-      </a>
-      <a href='https://nofee.team/more' class='nofee-nav-btn' target='_blank' rel='noopener'>
-        <svg width='20' height='20' viewBox='0 0 24 24' fill='none'>
-          <circle cx='11' cy='11' r='8' stroke='currentColor' stroke-width='2'/>
-          <path d='M21 21L16.65 16.65' stroke='currentColor' stroke-width='2' stroke-linecap='round'/>
-        </svg>
-        <span>검색</span>
-      </a>
-      <button class='nofee-nav-btn nofee-nav-primary' onclick='window.NofeeAI?.showDeliveryInfo?.()'>
-        <svg width='20' height='20' viewBox='0 0 24 24' fill='none'>
-          <path d='M5 12V7C5 5.9 5.9 5 7 5H14L19 10V15H17.5' stroke='currentColor' stroke-width='2'/>
-          <circle cx='7.5' cy='17.5' r='2.5' stroke='currentColor' stroke-width='2'/>
-          <circle cx='16.5' cy='17.5' r='2.5' stroke='currentColor' stroke-width='2'/>
-          <path d='M5 12H1' stroke='currentColor' stroke-width='2'/>
-        </svg>
-        <span>배송조회</span>
-      </button>
+    <!-- AI 생각중 -->
+    <div class='nofee-ai-thinking' id='aiThinking' style='display:none'>
+      <div class='nofee-thinking-content'>
+        <div class='nofee-ai-dots'>
+          <div class='nofee-ai-dot'></div>
+          <div class='nofee-ai-dot'></div>
+          <div class='nofee-ai-dot'></div>
+        </div>
+        <span class='nofee-ai-thinking-text'>AI가 분석 중입니다...</span>
+      </div>
     </div>
   </div>
 
-  <!-- 웹플로우 폼 (완전히 숨김 처리) -->
-  <form id='nofee-purchase-form' name='purchase' data-name='Purchase Form' style='position:absolute;left:-9999px;top:-9999px;visibility:hidden;'>
+  <!-- 웹플로우 폼 (숨김) -->
+  <form id='nofee-purchase-form' name='purchase' data-name='Purchase Form' style='position:absolute;left:-9999px;visibility:hidden;'>
     <input type='hidden' name='customer_name' id='customer_name'>
     <input type='hidden' name='customer_phone' id='customer_phone'>
     <input type='hidden' name='customer_region' id='customer_region'>
@@ -145,61 +121,68 @@
     <input type='hidden' name='activation_type' id='activation_type'>
     <input type='hidden' name='timestamp' id='timestamp'>
     <input type='hidden' name='session_id' id='session_id'>
-    <input type='hidden' name='utm_source' id='utm_source'>
-    <input type='hidden' name='utm_medium' id='utm_medium'>
-    <input type='hidden' name='utm_campaign' id='utm_campaign'>
-    <input type='submit' value='Submit' style='display:none;'>
   </form>
 
   <!-- 스크립트 -->
   <script>
-    // 폼 제출 방지 (개인정보 동의 전)
-    document.getElementById('nofee-purchase-form').addEventListener('submit', function(e) {
-      const consent = document.getElementById('privacy_consent').value;
-      if (consent !== '동의함') {
-        e.preventDefault();
-        console.log('개인정보 처리방침 동의가 필요합니다.');
-        return false;
+    // DOM 준비 확인
+    function waitForDOM(callback) {
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', callback);
+      } else {
+        callback();
       }
-    });
-    
-    // 메인 스크립트 로드
-    function loadNofeeScript() {
-      const candidates = [
-        'https://cdn.jsdelivr.net/gh/Jacob-PO/nofee_chat@main/main.js',
-        'https://jacob-po.github.io/nofee_chat/main.js'
-      ];
-      
-      Promise.any(candidates.map(src => 
-        new Promise((resolve, reject) => {
-          const script = document.createElement('script');
-          script.src = src + '?v=' + Date.now();
-          script.onload = () => window.NofeeAI?.init ? resolve(src) : reject();
-          script.onerror = reject;
-          document.head.appendChild(script);
-        })
-      ))
-      .then(() => {
-        // 초기화
-        window.NofeeAI.init();
-      })
-      .catch(() => {
-        document.getElementById('nofeeLoading').innerHTML = 
-          '<p style="color:#ef4444">초기화에 실패했습니다</p>' +
-          '<button onclick="location.reload()" style="margin-top:16px;padding:10px 24px;background:#4e5bff;color:white;border:none;border-radius:24px;cursor:pointer;font-weight:600">다시 시도</button>';
-      });
     }
     
-    // 최소화 기능
-    window.NofeeAI = window.NofeeAI || {};
-    window.NofeeAI.minimizeChat = function() {
-      const wrapper = document.getElementById('nofee-ai-wrapper');
-      if (wrapper) {
-        wrapper.style.display = 'none';
+    // 초기화
+    waitForDOM(function() {
+      // 폼 이벤트 리스너 (안전하게)
+      const form = document.getElementById('nofee-purchase-form');
+      if (form) {
+        form.addEventListener('submit', function(e) {
+          const consent = document.getElementById('privacy_consent');
+          if (!consent || consent.value !== '동의함') {
+            e.preventDefault();
+            console.log('개인정보 동의 필요');
+            return false;
+          }
+        });
       }
-    };
+      
+      // 시작 버튼 이벤트
+      const startBtn = document.getElementById('startConsultBtn');
+      if (startBtn) {
+        startBtn.onclick = function() {
+          if (window.NofeeAI && window.NofeeAI.startConsultation) {
+            window.NofeeAI.startConsultation();
+          }
+        };
+      }
+      
+      // 메인 스크립트 로드
+      loadNofeeScript();
+    });
     
-    // 즉시 실행
-    loadNofeeScript();
+    // 스크립트 로드
+    function loadNofeeScript() {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/gh/Jacob-PO/nofee_chat@main/main.js?v=' + Date.now();
+      script.onload = function() {
+        console.log('노피 AI 스크립트 로드 완료');
+        if (window.NofeeAI && window.NofeeAI.init) {
+          window.NofeeAI.init();
+        }
+      };
+      script.onerror = function() {
+        console.error('스크립트 로드 실패');
+        const loading = document.getElementById('nofeeLoading');
+        if (loading) {
+          loading.innerHTML = 
+            '<p style="color:#ef4444">초기화에 실패했습니다</p>' +
+            '<button onclick="location.reload()" style="margin-top:16px;padding:10px 24px;background:#4e5bff;color:white;border:none;border-radius:24px;cursor:pointer;font-weight:600">다시 시도</button>';
+        }
+      };
+      document.head.appendChild(script);
+    }
   </script>
 </div>
