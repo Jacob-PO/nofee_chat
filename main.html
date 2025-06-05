@@ -518,7 +518,7 @@
           if (!isBackup) {
             // GitHub Raw가 실패하면 GitHub CDN으로 재시도
             setTimeout(() => {
-            const cdnUrl = 'https://gitcdn.link/repo/Jacob-PO/nofee_chat/main.js';
+            const cdnUrl = 'https://gitcdn.link/repo/Jacob-PO/nofee_chat/main/main.js';
               loadScript(cdnUrl, true);
             }, 500);
           } else {
@@ -535,7 +535,7 @@
       }
 
       // 먼저 GitHub Raw에서 불러오기
-      const rawUrl = 'https://raw.githubusercontent.com/Jacob-PO/nofee_chat/main.js';
+      const rawUrl = 'https://raw.githubusercontent.com/Jacob-PO/nofee_chat/main/main.js';
       loadScript(rawUrl, false);
     })();
   </script>
