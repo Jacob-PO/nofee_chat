@@ -41,6 +41,12 @@ const state = {
   selectedProduct: {}
 };
 
+// ────────── 설정(config) ──────────
+const config = {
+  GITHUB_RAW: 'https://raw.githubusercontent.com/Jacob-PO/nofee_chat/main/',
+  GITHUB_CDN: 'https://gitcdn.link/repo/Jacob-PO/nofee_chat/main/'
+};
+
 // ────────── 2. 유틸리티(utils) ──────────
 const utils = {
   // 가격 숫자를 콤마 찍어주는 함수
@@ -744,22 +750,20 @@ async function initAIChat() {
       chatUI.addBotMessage("안녕하세요 고객님! 저는 AI 상담원입니다.");
     });
 
-    // 상품/지역 데이터 fetch (상대 경로)
-    const scriptUrl = new URL(document.currentScript.src);
-    const basePath = scriptUrl.pathname.split('/').slice(0, -2).join('/');
-    const origin = scriptUrl.origin;
-    const PRODUCTS_DATA_URL = `${origin}${basePath}/data/products.json`;
-    const REGIONS_DATA_URL = `${origin}${basePath}/data/regions.json`;
+    // 상품/지역 데이터 fetch (GitHub RAW → CDN fallback)
+    const fetchOpts = { method: 'GET', headers: { Accept: 'application/json' }, cache: 'no-cache' };
+
+    let itemRes = await fetch(config.GITHUB_RAW + 'item.json', fetchOpts);
+    let regionRes = await fetch(config.GITHUB_RAW + 'regions.json', fetchOpts);
+
+    if (!itemRes.ok || !regionRes.ok) {
+      itemRes = await fetch(config.GITHUB_CDN + 'item.json', fetchOpts);
+      regionRes = await fetch(config.GITHUB_CDN + 'regions.json', fetchOpts);
+    }
 
     const [productData, regionData] = await Promise.all([
-      fetch(PRODUCTS_DATA_URL).then(res => {
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        return res.json();
-      }),
-      fetch(REGIONS_DATA_URL).then(res => {
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        return res.json();
-      })
+      itemRes.json(),
+      regionRes.json()
     ]);
 
     state.products = utils.transformProducts(productData);
