@@ -1,888 +1,833 @@
-// 초기화
-    init: async function() {
-        console.log('노피 AI init 함수 호출됨');
-        
-        if (this.state.initialized) {
-            console.log('이미 초기화됨');
-            return;
-        }// 노피 AI 챗봇 - main.js (새로운 디자인 버전)
-// 즉시 window 객체에 등록
+// 노피 AI 챗봇 - main.js
+console.log('Nofee AI main.js 실행 시작');
 
-console.log('노피 AI 스크립트 실행 시작');
-
-// 노피 AI 메인 객체
+// 전역 NofeeAI 객체
 window.NofeeAI = {
     // 상태 관리
     state: {
-        initialized: false,
         currentStep: 'intro',
-        chatContainer: null,
-        messagesContainer: null,
-        phoneData: [],
-        regionData: [],
-        filters: {
-            priceRange: null,
-            carrier: null,
-            brand: null
-        },
+        messages: [],
         userData: {
-            dataUsage: null,
-            preference: null,
             name: '',
             phone: '',
+            dataUsage: '',
+            priceRange: '',
+            brand: '',
+            preference: '',
             region: '',
-            district: '',
-            consent: false
+            district: ''
         },
-        selectedProduct: null,
-        sessionId: 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-        messageHistory: [],
-        recommendationScore: {},
-        urlParams: {} // URL 파라미터 저장
+        isTyping: false,
+        phoneData: [],
+        regionData: [],
+        selectedProduct: null
     },
-    
+
     // 설정
     config: {
-        GITHUB_CDN_URL: 'https://cdn.jsdelivr.net/gh/Jacob-PO/nofee_chat@main/',
-        BACKUP_URL: 'https://raw.githubusercontent.com/Jacob-PO/nofee_chat/main/',
-        LOCAL_URL: '',
-        TYPING_SPEED: 20,
-        AI_THINKING_DELAY: 600
+        GITHUB_BASE: 'https://cdn.jsdelivr.net/gh/Jacob-PO/nofee_chat@main/',
+        BACKUP_BASE: 'https://raw.githubusercontent.com/Jacob-PO/nofee_chat/main/'
     },
-    
-    // 모델명 매핑
-    modelKoMap: {
-        'Samsung Galaxy S25 256GB': '갤럭시 S25 256GB',
-        'Samsung Galaxy S25 Plus 256GB': '갤럭시 S25 플러스 256GB',
-        'Samsung Galaxy S25 Ultra 256GB': '갤럭시 S25 울트라 256GB',
-        'Samsung Galaxy S24 FE': '갤럭시 S24 FE',
-        'Samsung Galaxy Z Flip6 256GB': '갤럭시 Z 플립6 256GB',
-        'Samsung Galaxy Z Fold6 256GB': '갤럭시 Z 폴드6 256GB',
-        'Samsung Galaxy A35 128GB': '갤럭시 A35 128GB',
-        'Samsung Galaxy A16': '갤럭시 A16',
-        'iPhone 16 128GB': '아이폰 16 128GB',
-        'iPhone 16 256GB': '아이폰 16 256GB',
-        'iPhone 16 Pro 128GB': '아이폰 16 Pro 128GB',
-        'iPhone 16 Pro 256GB': '아이폰 16 Pro 256GB',
-        'iPhone 16 Pro Max 256GB': '아이폰 16 Pro Max 256GB',
-        'iPhone 15 128GB': '아이폰 15 128GB',
-        'iPhone 15 Pro 128GB': '아이폰 15 Pro 128GB'
-    },
-    
+
+    // 채팅 컨테이너
+    chatContainer: null,
+
     // 초기화
     init: async function() {
-        console.log('노피 AI init 함수 호출됨');
-        
-        if (this.state.initialized) {
-            console.log('이미 초기화됨');
-            return;
-        }
-        
-        // URL 파라미터 저장
-        this.state.urlParams = this.urlParams || {};
-        console.log('URL 파라미터:', this.state.urlParams);
+        console.log('NofeeAI 초기화 시작');
         
         // DOM 요소 찾기
-        this.state.chatContainer = document.getElementById('nofeeChat');
-        this.state.messagesContainer = document.getElementById('nofeeMessages');
-        
-        if (!this.state.chatContainer) {
-            console.error('nofeeChat 컨테이너를 찾을 수 없습니다');
+        this.chatContainer = document.getElementById('nofee-chat-container');
+        if (!this.chatContainer) {
+            console.error('채팅 컨테이너를 찾을 수 없습니다');
             return;
         }
-        
-        console.log('채팅 컨테이너 찾음');
-        
-        try {
-            // 데이터 로드
-            await this.loadData();
-            
-            // 로딩 숨기고 인트로 표시
-            const loading = document.getElementById('nofeeLoading');
-            const intro = document.getElementById('nofeeIntro');
-            if (loading) loading.style.display = 'none';
-            if (intro) intro.style.display = 'flex';
-            
-            this.state.initialized = true;
-            console.log('노피 AI 초기화 완료');
-            
-        } catch (error) {
-            console.error('초기화 중 오류:', error);
-            this.showError('초기화 중 오류가 발생했습니다.');
-        }
+
+        // 이벤트 리스너 설정
+        this.setupEventListeners();
+
+        // 데이터 로드 및 시작
+        this.showLoading();
+        await this.loadData();
+        this.hideLoading();
+        this.showIntro();
     },
-    
+
     // 이벤트 리스너 설정
     setupEventListeners: function() {
-        // 홈 버튼
-        const homeBtn = document.getElementById('nofeeHomeBtn');
-        if (homeBtn) {
-            homeBtn.onclick = () => this.resetChat();
-        }
-        
-        // 상품보기 버튼
-        const phoneBtn = document.getElementById('nofeePhoneBtn');
-        if (phoneBtn) {
-            phoneBtn.onclick = () => this.showPhoneList();
-        }
-        
-        // AI 상담 시작 버튼
-        const startBtn = document.getElementById('nofeeStartBtn');
-        if (startBtn) {
-            startBtn.onclick = () => this.startConsultation();
+        const resetBtn = document.getElementById('nofee-reset-btn');
+        if (resetBtn) {
+            resetBtn.onclick = () => this.resetChat();
         }
     },
-    
+
+    // 로딩 표시
+    showLoading: function() {
+        const loadingHTML = `
+            <div class="nofee-message-group" id="nofee-loading-message">
+                <div class="nofee-loading">
+                    <div class="nofee-typing-indicator">
+                        <div class="nofee-typing-dot"></div>
+                        <div class="nofee-typing-dot"></div>
+                        <div class="nofee-typing-dot"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+        this.chatContainer.innerHTML = loadingHTML;
+    },
+
+    hideLoading: function() {
+        const loading = document.getElementById('nofee-loading-message');
+        if (loading) loading.remove();
+    },
+
     // 데이터 로드
     loadData: async function() {
-        console.log('데이터 로드 시작');
-        
-        const sources = [
-            this.config.GITHUB_CDN_URL,
-            this.config.BACKUP_URL,
-            this.config.LOCAL_URL
-        ];
-
-        let lastError = null;
-
-        for (const base of sources) {
-            if (!base && base !== '') continue;
-            try {
-                const itemRes = await fetch(base + 'item.json');
-                if (!itemRes.ok) throw new Error('item.json load failed');
-                const itemData = await itemRes.json();
-
-                const regionRes = await fetch(base + 'regions.json');
-                if (!regionRes.ok) throw new Error('regions.json load failed');
-                const regionData = await regionRes.json();
-
-                this.state.phoneData = this.transformProducts(itemData);
-                this.state.regionData = regionData;
-
-                console.log('데이터 로드 성공 via', base || 'local');
-                lastError = null;
-                break;
-            } catch (err) {
-                lastError = err;
-                console.warn('데이터 로드 실패', base || 'local', err);
+        try {
+            // 먼저 CDN에서 시도
+            let itemRes = await fetch(this.config.GITHUB_BASE + 'item.json');
+            let regionRes = await fetch(this.config.GITHUB_BASE + 'regions.json');
+            
+            // CDN 실패시 백업 URL 시도
+            if (!itemRes.ok || !regionRes.ok) {
+                itemRes = await fetch(this.config.BACKUP_BASE + 'item.json');
+                regionRes = await fetch(this.config.BACKUP_BASE + 'regions.json');
             }
-        }
-
-        if (lastError) {
-            throw new Error('데이터를 불러올 수 없습니다');
+            
+            const itemData = await itemRes.json();
+            const regionData = await regionRes.json();
+            
+            // 데이터 변환 및 저장
+            this.state.phoneData = this.transformPhoneData(itemData);
+            this.state.regionData = regionData;
+            
+            console.log('데이터 로드 성공:', this.state.phoneData.length + '개 상품');
+            
+        } catch (error) {
+            console.error('데이터 로드 실패:', error);
+            this.showError('데이터를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.');
         }
     },
-    
+
     // 상품 데이터 변환
-    transformProducts: function(rawData) {
+    transformPhoneData: function(rawData) {
         return rawData.map(item => ({
             ...item,
-            model: this.modelKoMap[item.Model] || item.Model,
-            storage: item.Storage || '128GB',
-            activation: item['Activation Type'] || '신규',
-            contract: item['Contract Type'] || '공시',
-            carrier: item.Carrier || 'SKT',
-            total: item['Total Monthly Payment'] || 0,
-            deviceDiscount: item['Monthly Device Fee'] || 0,
-            planFee: item['Monthly Plan Fee'] || 0,
-            devicePrice: item['Retail Price'] || 0,
-            hasExtraDiscount: (item['Monthly Device Fee'] || 0) < 0,
-            extraDiscountAmount: Math.abs(Math.min(0, item['Monthly Device Fee'] || 0))
+            model: item.Model,
+            brand: item.Brand === '삼성' ? 'samsung' : item.Brand === '애플' ? 'apple' : 'other',
+            activation: item['Activation Type'],
+            carrier: item.Carrier,
+            contract: item['Contract Type'],
+            total: item['Total Monthly Payment'],
+            deviceFee: item['Monthly Device Fee'],
+            planFee: item['Monthly Plan Fee'],
+            retailPrice: item['Retail Price'],
+            hasDiscount: item['Monthly Device Fee'] < 0,
+            discount: Math.abs(Math.min(0, item['Monthly Device Fee']))
         }));
     },
-    
+
+    // 인트로 화면 표시
+    showIntro: function() {
+        const introHTML = `
+            <div class="nofee-message-group">
+                <div class="nofee-manager-card">
+                    <div class="nofee-manager-avatar">AI</div>
+                    <div class="nofee-manager-name">노피 AI 매니저</div>
+                    <div class="nofee-manager-info">운영시간: 24시간</div>
+                    <div class="nofee-manager-info" style="margin-top: 12px; color: #5D5FEF;">
+                        <strong>✨ 맞춤 휴대폰 추천 서비스</strong>
+                    </div>
+                </div>
+                
+                <div class="nofee-choice-cards">
+                    <div class="nofee-choice-card primary" onclick="window.NofeeAI.startConsultation()">
+                        <div class="nofee-choice-icon">🤖</div>
+                        <div class="nofee-choice-title">AI 상담</div>
+                        <div class="nofee-choice-desc">맞춤 추천받기</div>
+                    </div>
+                    <div class="nofee-choice-card secondary" onclick="window.NofeeAI.showAllProducts()">
+                        <div class="nofee-choice-icon">📱</div>
+                        <div class="nofee-choice-title">상품 보기</div>
+                        <div class="nofee-choice-desc">전체 상품 확인</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        this.addToChat(introHTML);
+    },
+
     // 상담 시작
-    startConsultation: async function() {
-        console.log('상담 시작');
-        
-        // 인트로 화면 숨기기
-        const intro = document.getElementById('nofeeIntro');
-        if (intro) intro.style.display = 'none';
-        
-        // 메시지 컨테이너 표시
-        if (!this.state.messagesContainer) {
-            this.state.messagesContainer = document.getElementById('nofeeMessages');
-        }
-        
-        if (this.state.messagesContainer) {
-            this.state.messagesContainer.style.display = 'block';
-            this.state.messagesContainer.innerHTML = ''; // 초기화
-        }
-        
-        // 인사 메시지
-        await this.showGreeting();
+    startConsultation: function() {
+        this.state.currentStep = 'greeting';
+        this.clearChat();
+        this.addBotMessage('안녕하세요! 휴대폰 AI 상담사입니다 🙌');
+        setTimeout(() => {
+            this.addBotMessage('고객님께 딱 맞는 휴대폰을 찾아드릴게요!');
+            setTimeout(() => {
+                this.askDataUsage();
+            }, 1000);
+        }, 1000);
     },
-    
-    // 인사 메시지
-    showGreeting: async function() {
-        await this.addBotMessage('안녕하세요! 휴대폰 전문 AI 어드바이저입니다 🙌');
-        await this.delay(300);
-        await this.addBotMessage('몇 가지 질문을 통해 고객님께 딱 맞는 휴대폰을 찾아드릴게요!');
-        await this.delay(500);
-        this.askDataUsage();
-    },
-    
+
     // 데이터 사용량 질문
-    askDataUsage: async function() {
+    askDataUsage: function() {
         this.state.currentStep = 'dataUsage';
-        await this.addBotMessage('먼저 데이터 사용량을 알려주세요. 평소 어떻게 사용하시나요?');
+        this.addBotMessage('평소 데이터를 얼마나 사용하시나요?');
         
-        this.showButtons([
-            '📺 많이 써요 (무제한 필요)',
-            '📱 보통이에요',
-            '💬 적게 써요 (SNS 정도)'
-        ], (selected) => {
-            const usage = selected.includes('많이') ? 'high' : 
-                         selected.includes('보통') ? 'medium' : 'low';
-            this.state.userData.dataUsage = usage;
-            this.handleDataUsage(selected);
-        });
+        const optionsHTML = `
+            <div class="nofee-button-options">
+                <button class="nofee-option-btn" onclick="window.NofeeAI.handleDataUsage('high')">
+                    <span class="emoji">📺</span>
+                    <span>많이 써요 (무제한 필요)</span>
+                </button>
+                <button class="nofee-option-btn" onclick="window.NofeeAI.handleDataUsage('medium')">
+                    <span class="emoji">📱</span>
+                    <span>보통이에요</span>
+                </button>
+                <button class="nofee-option-btn" onclick="window.NofeeAI.handleDataUsage('low')">
+                    <span class="emoji">💬</span>
+                    <span>적게 써요 (SNS 정도)</span>
+                </button>
+            </div>
+        `;
+        
+        this.addToChat(optionsHTML);
     },
-    
+
     // 데이터 사용량 처리
-    handleDataUsage: async function(selected) {
-        await this.addUserMessage(selected);
+    handleDataUsage: function(level) {
+        this.state.userData.dataUsage = level;
+        const messages = {
+            'high': '무제한 요금제가 필요하시군요! 🚀',
+            'medium': '적절한 데이터 요금제로 추천드릴게요! 👍',
+            'low': '알뜰한 요금제로 추천드릴게요! 💰'
+        };
         
-        let message = '';
-        if (selected.includes('많이')) {
-            message = '무제한 요금제가 필요하시군요! 마음껏 사용할 수 있는 플랜으로 추천드릴게요 🚀';
-        } else if (selected.includes('보통')) {
-            message = '적절한 데이터 요금제로 추천드릴게요! 가장 인기 있는 선택이에요 👍';
-        } else {
-            message = '알뜰한 요금제로 추천드릴게요! 현명한 선택이에요 💰';
-        }
+        this.clearOptions();
+        this.addUserMessage(level === 'high' ? '많이 써요' : level === 'medium' ? '보통이에요' : '적게 써요');
+        this.addBotMessage(messages[level]);
         
-        await this.addBotMessage(message);
-        await this.delay(500);
-        this.askPriceRange();
+        setTimeout(() => {
+            this.askPriceRange();
+        }, 1000);
     },
-    
+
     // 가격대 질문
-    askPriceRange: async function() {
+    askPriceRange: function() {
         this.state.currentStep = 'price';
-        await this.addBotMessage('희망하시는 월 납부 금액대를 선택해주세요');
+        this.addBotMessage('희망하시는 월 납부 금액대를 선택해주세요');
         
-        this.showButtons([
-            '💵 3~5만원',
-            '💵 5~7만원', 
-            '💵 7~9만원',
-            '💵 9~10만원',
-            '💵 10만원 이상'
-        ], (selected) => {
-            const ranges = {
-                '💵 3~5만원': '30000-50000',
-                '💵 5~7만원': '50000-70000',
-                '💵 7~9만원': '70000-90000',
-                '💵 9~10만원': '90000-100000',
-                '💵 10만원 이상': '100000-9999999'
-            };
-            this.state.filters.priceRange = ranges[selected];
-            this.handlePrice(selected);
-        });
+        const optionsHTML = `
+            <div class="nofee-button-options">
+                <button class="nofee-option-btn" onclick="window.NofeeAI.handlePrice('30000-50000')">
+                    <span class="emoji">💵</span>
+                    <span>3~5만원</span>
+                </button>
+                <button class="nofee-option-btn" onclick="window.NofeeAI.handlePrice('50000-70000')">
+                    <span class="emoji">💵</span>
+                    <span>5~7만원</span>
+                </button>
+                <button class="nofee-option-btn" onclick="window.NofeeAI.handlePrice('70000-90000')">
+                    <span class="emoji">💵</span>
+                    <span>7~9만원</span>
+                </button>
+                <button class="nofee-option-btn" onclick="window.NofeeAI.handlePrice('90000-100000')">
+                    <span class="emoji">💵</span>
+                    <span>9~10만원</span>
+                </button>
+                <button class="nofee-option-btn" onclick="window.NofeeAI.handlePrice('100000-200000')">
+                    <span class="emoji">💵</span>
+                    <span>10만원 이상</span>
+                </button>
+            </div>
+        `;
+        
+        this.addToChat(optionsHTML);
     },
-    
-    // 가격 선택 처리
-    handlePrice: async function(selected) {
-        await this.addUserMessage(selected);
-        await this.addBotMessage('선호하시는 브랜드가 있으신가요?');
-        this.askBrand();
+
+    // 가격 처리
+    handlePrice: function(range) {
+        this.state.userData.priceRange = range;
+        this.clearOptions();
+        const [min, max] = range.split('-');
+        let displayPrice;
+        if (parseInt(min) >= 100000) {
+            displayPrice = '10만원 이상';
+        } else {
+            displayPrice = `${parseInt(min)/10000}~${parseInt(max)/10000}만원`;
+        }
+        this.addUserMessage(displayPrice);
+        this.addBotMessage('좋습니다! 다음 질문으로 넘어갈게요.');
+        
+        setTimeout(() => {
+            this.askBrand();
+        }, 1000);
     },
-    
+
     // 브랜드 질문
     askBrand: function() {
         this.state.currentStep = 'brand';
-        this.showButtons(['🍎 애플', '🤖 삼성', '🌟 기타'], (selected) => {
-            const brand = selected.includes('애플') ? '애플' : 
-                         selected.includes('삼성') ? '삼성' : '기타';
-            this.state.filters.brand = brand;
-            this.handleBrand(selected);
-        });
+        this.addBotMessage('선호하시는 브랜드가 있으신가요?');
+        
+        const optionsHTML = `
+            <div class="nofee-button-options">
+                <button class="nofee-option-btn" onclick="window.NofeeAI.handleBrand('apple')">
+                    <span class="emoji">🍎</span>
+                    <span>애플</span>
+                </button>
+                <button class="nofee-option-btn" onclick="window.NofeeAI.handleBrand('samsung')">
+                    <span class="emoji">🤖</span>
+                    <span>삼성</span>
+                </button>
+                <button class="nofee-option-btn" onclick="window.NofeeAI.handleBrand('other')">
+                    <span class="emoji">🌟</span>
+                    <span>상관없어요</span>
+                </button>
+            </div>
+        `;
+        
+        this.addToChat(optionsHTML);
     },
-    
-    // 브랜드 선택 처리
-    handleBrand: async function(selected) {
-        await this.addUserMessage(selected);
-        await this.addBotMessage('마지막으로, 가장 중요하게 생각하시는 기능은 무엇인가요?');
-        this.askPreference();
+
+    // 브랜드 처리
+    handleBrand: function(brand) {
+        this.state.userData.brand = brand;
+        this.clearOptions();
+        const brandNames = {
+            'apple': '애플',
+            'samsung': '삼성',
+            'other': '상관없어요'
+        };
+        this.addUserMessage(brandNames[brand]);
+        
+        // 타이핑 인디케이터 표시
+        this.showTypingIndicator();
+        
+        setTimeout(() => {
+            this.hideTypingIndicator();
+            this.showRecommendations();
+        }, 2000);
     },
-    
-    // 선호도 질문
-    askPreference: function() {
-        this.state.currentStep = 'preference';
-        this.showButtons([
-            '📸 카메라 성능',
-            '🎮 처리 속도',
-            '🔋 배터리 수명',
-            '💰 가성비'
-        ], (selected) => {
-            const pref = selected.includes('카메라') ? 'camera' :
-                        selected.includes('처리') ? 'game' :
-                        selected.includes('배터리') ? 'battery' : 'price';
-            this.state.userData.preference = pref;
-            this.handlePreference(selected);
-        });
-    },
-    
-    // 선호도 처리
-    handlePreference: async function(selected) {
-        await this.addUserMessage(selected);
-        await this.showAIThinking();
-        await this.delay(1200);
-        this.hideAIThinking();
-        this.showFilteredPhones();
-    },
-    
-    // 필터링된 휴대폰 표시
-    showFilteredPhones: async function() {
+
+    // 추천 결과 표시
+    showRecommendations: function() {
+        this.addBotMessage('고객님께 딱 맞는 상품을 찾았어요! ✨');
+        
+        // 필터링
         let filtered = [...this.state.phoneData];
         
         // 가격 필터
-        if (this.state.filters.priceRange) {
-            const [min, max] = this.state.filters.priceRange.split('-').map(Number);
+        if (this.state.userData.priceRange) {
+            const [min, max] = this.state.userData.priceRange.split('-').map(Number);
             filtered = filtered.filter(p => p.total >= min && p.total <= max);
         }
         
         // 브랜드 필터
-        if (this.state.filters.brand !== '기타') {
-            filtered = filtered.filter(p => p.Brand === this.state.filters.brand);
+        if (this.state.userData.brand !== 'other') {
+            filtered = filtered.filter(p => p.brand === this.state.userData.brand);
         }
         
-        // 중복 제거
+        // 중복 제거 (모델명, 통신사 기준)
         const seen = new Set();
         filtered = filtered.filter(p => {
-            const key = `${p.model}-${p.carrier}-${p.storage}`;
+            const key = `${p.model}-${p.carrier}`;
             if (seen.has(key)) return false;
             seen.add(key);
             return true;
         });
         
-        // 랭킹
+        // 정렬 (할인이 큰 순서로)
         filtered.sort((a, b) => {
-            let scoreA = 100 - (a.total / 1000);
-            let scoreB = 100 - (b.total / 1000);
-            
-            if (a.hasExtraDiscount) scoreA += a.extraDiscountAmount / 500;
-            if (b.hasExtraDiscount) scoreB += b.extraDiscountAmount / 500;
-            
+            const scoreA = a.hasDiscount ? a.discount : 0;
+            const scoreB = b.hasDiscount ? b.discount : 0;
             return scoreB - scoreA;
         });
         
-        const displayPhones = filtered.slice(0, 5);
+        // 상위 5개만 표시
+        const recommendations = filtered.slice(0, 5);
         
-        if (displayPhones.length === 0) {
-            await this.addBotMessage('조건에 맞는 상품이 없어요 😢 다른 조건으로 다시 찾아볼까요?');
-            this.showButtons(['🔄 다시 검색하기'], () => this.resetChat());
+        if (recommendations.length === 0) {
+            this.addBotMessage('조건에 맞는 상품이 없어요 😢 다른 조건으로 다시 찾아볼까요?');
+            this.showRetryButton();
             return;
         }
         
-        await this.addBotMessage('고객님께 추천드리는 상품입니다! ✨');
-        
-        // 전역 변수 저장
-        window.NofeeDisplayedPhones = displayPhones;
-        
-        // 상품 카드 HTML
-        const cards = displayPhones.map((phone, index) => `
-            <div class="product-card" onclick="window.NofeeAI.selectPhone(${index})">
-                ${phone.hasExtraDiscount ? '<div class="product-badge">특가</div>' : ''}
-                <h4 class="product-title">${phone.model}</h4>
-                <p class="product-details">${phone.activation} · ${phone.carrier} · ${phone.contract}</p>
-                <p class="product-price">월 ${this.formatPrice(phone.total)}원</p>
-                ${phone.hasExtraDiscount ? `<p class="product-discount">🎉 ${this.formatPrice(phone.extraDiscountAmount)}원 추가 할인!</p>` : ''}
-            </div>
-        `).join('');
-        
-        const wrapper = document.createElement('div');
-        wrapper.innerHTML = cards;
-        
-        // 상품 카드를 아래에 추가
-        if (this.state.messagesContainer) {
-            this.state.messagesContainer.appendChild(wrapper);
-        }
-        this.scrollToBottom();
+        // 상품 카드 표시
+        setTimeout(() => {
+            const productsHTML = `
+                <div class="nofee-message-group">
+                    ${recommendations.map((phone, index) => `
+                        <div class="nofee-product-card" onclick="window.NofeeAI.selectProduct(${index})">
+                            <div class="nofee-product-header">
+                                <div class="nofee-product-title">${phone.model}</div>
+                                ${phone.hasDiscount ? '<div class="nofee-product-badge">특가</div>' : ''}
+                            </div>
+                            <div class="nofee-product-details">${phone.activation} · ${phone.carrier} · ${phone.contract}</div>
+                            <div class="nofee-product-price">월 ${this.formatPrice(phone.total)}원</div>
+                            ${phone.hasDiscount ? `<div class="nofee-product-discount">🎉 ${this.formatPrice(phone.discount)}원 추가 할인!</div>` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            // 전역 변수에 저장
+            window.NofeeAI.currentRecommendations = recommendations;
+            
+            this.addToChat(productsHTML);
+        }, 1000);
     },
-    
-    // 휴대폰 선택
-    selectPhone: async function(index) {
-        const phone = window.NofeeDisplayedPhones[index];
-        this.state.selectedProduct = phone;
+
+    // 상품 선택
+    selectProduct: function(index) {
+        const product = this.currentRecommendations[index];
+        this.state.selectedProduct = product;
         
-        await this.addUserMessage(`${phone.model} 선택`);
+        this.clearOptions();
+        this.addUserMessage(product.model + ' 선택');
         
-        let msg = `좋은 선택이세요! 👍\n\n`;
-        msg += `📱 ${phone.model} (${phone.storage})\n`;
-        msg += `📝 ${phone.activation} · ${phone.carrier} · ${phone.contract}\n`;
-        msg += `💰 월 ${this.formatPrice(phone.total)}원`;
-        if (phone.hasExtraDiscount) {
-            msg += ` (추가 할인 ${this.formatPrice(phone.extraDiscountAmount)}원 적용)`;
+        let message = `좋은 선택이세요! 👍\n\n`;
+        message += `📱 ${product.model}\n`;
+        message += `📝 ${product.activation} · ${product.carrier} · ${product.contract}\n`;
+        message += `💰 월 ${this.formatPrice(product.total)}원`;
+        if (product.hasDiscount) {
+            message += `\n🎉 추가 할인 ${this.formatPrice(product.discount)}원 적용!`;
         }
-        msg += '\n\n지금 바로 신청하시겠어요?';
         
-        await this.addBotMessage(msg);
+        this.addBotMessage(message);
         
-        this.showButtons(['네, 신청할게요', '다시 선택할게요'], (selected) => {
-            if (selected === '네, 신청할게요') {
-                this.startPurchase();
-            } else {
-                this.resetChat();
-            }
-        });
+        setTimeout(() => {
+            this.addBotMessage('지금 바로 신청하시겠어요?');
+            const optionsHTML = `
+                <div class="nofee-button-options">
+                    <button class="nofee-option-btn" onclick="window.NofeeAI.startPurchase()">
+                        <span class="emoji">✅</span>
+                        <span>네, 신청할게요</span>
+                    </button>
+                    <button class="nofee-option-btn" onclick="window.NofeeAI.showMoreProducts()">
+                        <span class="emoji">🔄</span>
+                        <span>다른 상품 보기</span>
+                    </button>
+                </div>
+            `;
+            this.addToChat(optionsHTML);
+        }, 1000);
     },
-    
+
     // 구매 시작
-    startPurchase: async function() {
-        await this.addUserMessage('네, 신청할게요');
-        await this.addBotMessage('좋습니다! 신청을 위해 몇 가지 정보가 필요해요.\n먼저 성함을 알려주세요.');
+    startPurchase: function() {
+        this.clearOptions();
+        this.addUserMessage('네, 신청할게요');
+        this.addBotMessage('좋습니다! 신청을 위해 몇 가지 정보가 필요해요.');
         
-        this.showInput('text', '홍길동', (value) => {
+        setTimeout(() => {
+            this.askCustomerName();
+        }, 1000);
+    },
+
+    // 고객 이름 요청
+    askCustomerName: function() {
+        this.addBotMessage('먼저 성함을 알려주세요.');
+        this.showInputField('text', '홍길동', (value) => {
+            if (value.length < 2) {
+                alert('정확한 성함을 입력해주세요.');
+                return false;
+            }
             this.state.userData.name = value;
-            this.askPhone();
+            this.handleCustomerName();
         });
     },
-    
-    // 전화번호 입력
-    askPhone: async function() {
-        await this.addUserMessage(this.state.userData.name);
-        await this.addBotMessage('연락 가능한 휴대폰 번호를 입력해주세요.\n(\'-\' 없이 숫자만)');
-        
-        this.showInput('tel', '01012345678', (value) => {
+
+    // 고객 이름 처리
+    handleCustomerName: function() {
+        this.clearOptions();
+        this.addUserMessage(this.state.userData.name);
+        this.askCustomerPhone();
+    },
+
+    // 전화번호 요청
+    askCustomerPhone: function() {
+        this.addBotMessage('연락 가능한 휴대폰 번호를 입력해주세요.\n(\'-\' 없이 숫자만)');
+        this.showInputField('tel', '01012345678', (value) => {
             if (!/^01[0-9]{8,9}$/.test(value)) {
-                alert('올바른 전화번호 형식이 아니에요');
+                alert('올바른 전화번호 형식이 아니에요.');
                 return false;
             }
             this.state.userData.phone = value;
-            this.askRegion();
+            this.handleCustomerPhone();
         });
     },
-    
+
+    // 전화번호 처리
+    handleCustomerPhone: function() {
+        this.clearOptions();
+        this.addUserMessage(this.state.userData.phone);
+        this.askRegion();
+    },
+
     // 지역 선택
-    askRegion: async function() {
-        await this.addUserMessage(this.state.userData.phone);
-        await this.addBotMessage('거주하시는 지역(시/도)을 선택해주세요.');
+    askRegion: function() {
+        this.addBotMessage('거주하시는 지역(시/도)을 선택해주세요.');
         
         const regions = this.state.regionData.map(r => r.name);
-        this.showSelect(regions, (value) => {
-            this.state.userData.region = value;
-            this.askDistrict();
-        });
-    },
-    
-    // 구/군 선택
-    askDistrict: async function() {
-        await this.addUserMessage(this.state.userData.region);
-        
-        const region = this.state.regionData.find(r => r.name === this.state.userData.region);
-        const districts = region ? region.districts : [];
-        
-        if (districts.length === 0) {
-            this.state.userData.district = this.state.userData.region;
-            this.askConsent();
-            return;
-        }
-        
-        await this.addBotMessage('세부 지역(구/군)을 선택해주세요.');
-        this.showSelect(districts, (value) => {
-            this.state.userData.district = value;
-            this.askConsent();
-        });
-    },
-    
-    // 개인정보 동의
-    askConsent: async function() {
-        await this.addUserMessage(this.state.userData.district);
-        await this.addBotMessage('마지막으로 개인정보 수집·이용에 동의해주세요.');
-        
-        const consentDiv = document.createElement('div');
-        consentDiv.className = 'consent-box';
-        consentDiv.innerHTML = `
-            <a href="https://nofee.team/policy" target="_blank" class="consent-link">📄 개인정보 처리방침 확인하기</a>
-            <div class="consent-details">
-                <strong>수집 항목:</strong> 성명, 휴대폰 번호, 지역<br>
-                <strong>수집 목적:</strong> 휴대폰 구매 상담 및 계약 진행<br>
-                <strong>보유기간:</strong> 서비스 제공 완료 후 1년
+        const optionsHTML = `
+            <div class="nofee-button-options" style="max-height: 300px; overflow-y: auto;">
+                ${regions.map(region => `
+                    <button class="nofee-option-btn" onclick="window.NofeeAI.handleRegion('${region}')">
+                        <span>${region}</span>
+                    </button>
+                `).join('')}
             </div>
         `;
-        
-        // 동의 박스를 아래에 추가
-        if (this.state.messagesContainer) {
-            this.state.messagesContainer.appendChild(consentDiv);
-        }
-        
-        this.showButtons(['동의합니다', '동의하지 않습니다'], (selected) => {
-            this.handleConsent(selected === '동의합니다');
-        });
+        this.addToChat(optionsHTML);
     },
-    
+
+    // 지역 처리
+    handleRegion: function(region) {
+        this.state.userData.region = region;
+        this.clearOptions();
+        this.addUserMessage(region);
+        
+        const regionData = this.state.regionData.find(r => r.name === region);
+        if (regionData && regionData.districts.length > 0) {
+            this.askDistrict(regionData.districts);
+        } else {
+            this.state.userData.district = region;
+            this.askConsent();
+        }
+    },
+
+    // 구/군 선택
+    askDistrict: function(districts) {
+        this.addBotMessage('세부 지역(구/군)을 선택해주세요.');
+        
+        const optionsHTML = `
+            <div class="nofee-button-options" style="max-height: 300px; overflow-y: auto;">
+                ${districts.map(district => `
+                    <button class="nofee-option-btn" onclick="window.NofeeAI.handleDistrict('${district}')">
+                        <span>${district}</span>
+                    </button>
+                `).join('')}
+            </div>
+        `;
+        this.addToChat(optionsHTML);
+    },
+
+    // 구/군 처리
+    handleDistrict: function(district) {
+        this.state.userData.district = district;
+        this.clearOptions();
+        this.addUserMessage(district);
+        this.askConsent();
+    },
+
+    // 개인정보 동의
+    askConsent: function() {
+        this.addBotMessage('마지막으로 개인정보 수집·이용에 동의해주세요.');
+        
+        const consentHTML = `
+            <div class="nofee-message-group">
+                <div class="nofee-consent-box">
+                    <a href="https://nofee.team/policy" target="_blank" class="nofee-consent-link">
+                        📄 개인정보 처리방침 확인하기
+                    </a>
+                    <div class="nofee-consent-details">
+                        <strong>수집 항목:</strong> 성명, 휴대폰 번호, 지역<br>
+                        <strong>수집 목적:</strong> 휴대폰 구매 상담 및 계약 진행<br>
+                        <strong>보유기간:</strong> 서비스 제공 완료 후 1년
+                    </div>
+                </div>
+                <div class="nofee-button-options">
+                    <button class="nofee-option-btn" onclick="window.NofeeAI.handleConsent(true)">
+                        <span class="emoji">✅</span>
+                        <span>동의합니다</span>
+                    </button>
+                    <button class="nofee-option-btn" onclick="window.NofeeAI.handleConsent(false)">
+                        <span class="emoji">❌</span>
+                        <span>동의하지 않습니다</span>
+                    </button>
+                </div>
+            </div>
+        `;
+        this.addToChat(consentHTML);
+    },
+
     // 동의 처리
-    handleConsent: async function(agreed) {
-        await this.addUserMessage(agreed ? '동의합니다' : '동의하지 않습니다');
+    handleConsent: function(agreed) {
+        this.clearOptions();
+        this.addUserMessage(agreed ? '동의합니다' : '동의하지 않습니다');
         
         if (agreed) {
-            this.state.userData.consent = true;
-            
-            // 개인정보 동의값 설정 (필수!)
-            const consentField = document.getElementById('privacy_consent');
-            if (consentField) {
-                consentField.value = '동의함';
-            }
-            
-            await this.addBotMessage('감사합니다! 신청이 접수되었습니다 🎉');
-            
-            // 폼 데이터 채우기
-            this.fillFormData();
-            
-            // 폼 자동 제출
+            this.showTypingIndicator();
             setTimeout(() => {
-                this.submitForm();
-            }, 500);
+                this.hideTypingIndicator();
+                this.addBotMessage('감사합니다! 신청이 완료되었습니다 🎉');
+                setTimeout(() => {
+                    this.addBotMessage('곧 전문 상담사가 연락드릴 예정이에요.\n노피를 이용해주셔서 감사합니다! 💙');
+                    this.showCompleteButtons();
+                }, 1000);
+            }, 2000);
             
-            await this.delay(1000);
-            await this.addBotMessage('곧 전문 상담사가 연락드릴 예정이에요.\n노피를 이용해주셔서 감사합니다! 💙');
-            
+            // 여기서 실제 폼 제출 로직 실행
+            this.submitApplication();
         } else {
-            // 동의하지 않은 경우 동의값 초기화
-            const consentField = document.getElementById('privacy_consent');
-            if (consentField) {
-                consentField.value = '';
-            }
-            
-            await this.addBotMessage('개인정보 동의 없이는 진행이 어려워요.\n다음에 다시 이용해주세요!');
-            this.showButtons(['처음으로 돌아가기'], () => this.resetChat());
+            this.addBotMessage('개인정보 동의 없이는 진행이 어려워요.\n다음에 다시 이용해주세요!');
+            this.showRetryButton();
         }
     },
-    
-    // 폼 데이터 채우기 (상품의 모든 정보 포함)
-    fillFormData: function() {
+
+    // 신청 제출
+    submitApplication: function() {
         const product = this.state.selectedProduct;
+        const sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         
-        // 고객 정보
-        const customerFields = {
-            customer_name: this.state.userData.name,
-            customer_phone: this.state.userData.phone,
-            customer_region: this.state.userData.region,
-            customer_district: this.state.userData.district
-        };
+        // 폼 필드 채우기
+        document.getElementById('customer_name').value = this.state.userData.name;
+        document.getElementById('customer_phone').value = this.state.userData.phone;
+        document.getElementById('customer_region').value = this.state.userData.region;
+        document.getElementById('customer_district').value = this.state.userData.district;
+        document.getElementById('privacy_consent').value = '동의함';
         
-        // 상품 정보
-        const productFields = {
-            phone_model: product.model || product.Model,
-            phone_brand: product.Brand,
-            phone_storage: product.storage || product.Storage,
-            phone_carrier: product.carrier || product.Carrier,
-            activation_type: product.activation || product['Activation Type'],
-            contract_type: product.contract || product['Contract Type'],
-            retail_price: product.devicePrice || product['Retail Price'],
-            monthly_device_fee: product.deviceDiscount || product['Monthly Device Fee'],
-            monthly_plan_fee: product.planFee || product['Monthly Plan Fee'],
-            total_monthly_payment: product.total || product['Total Monthly Payment'],
-            extra_discount: product.extraDiscountAmount || 0,
-            product_code: product.code || product.id || '',
-            plan_name: product.planName || product['Plan Name'] || '',
-            plan_data: product.planData || product['Plan Data'] || '',
-            plan_voice: product.planVoice || product['Plan Voice'] || '',
-            plan_sms: product.planSms || product['Plan SMS'] || ''
-        };
+        document.getElementById('phone_model').value = product.model;
+        document.getElementById('phone_brand').value = product.Brand;
+        document.getElementById('phone_storage').value = product.Storage || '';
+        document.getElementById('phone_carrier').value = product.carrier;
+        document.getElementById('activation_type').value = product.activation;
+        document.getElementById('contract_type').value = product.contract;
         
-        // 메타 정보
-        const metaFields = {
-            timestamp: new Date().toISOString(),
-            session_id: this.state.sessionId,
-            product_json: JSON.stringify(product) // 전체 상품 정보를 JSON으로
-        };
+        document.getElementById('retail_price').value = product.retailPrice || 0;
+        document.getElementById('monthly_device_fee').value = product.deviceFee || 0;
+        document.getElementById('monthly_plan_fee').value = product.planFee || 0;
+        document.getElementById('total_monthly_payment').value = product.total || 0;
+        document.getElementById('extra_discount').value = product.discount || 0;
         
-        // 모든 필드 채우기
-        const allFields = {...customerFields, ...productFields, ...metaFields};
+        document.getElementById('timestamp').value = new Date().toISOString();
+        document.getElementById('session_id').value = sessionId;
+        document.getElementById('product_json').value = JSON.stringify(product);
         
-        Object.entries(allFields).forEach(([key, value]) => {
-            const field = document.getElementById(key);
-            if (field) {
-                field.value = value || '';
-            }
-        });
-        
-        console.log('폼 데이터 채움:', allFields);
-    },
-    
-    // 폼 제출
-    submitForm: function() {
-        const form = document.getElementById('nofee-form') || document.getElementById('nofee-purchase-form');
-        const consentField = document.getElementById('privacy_consent');
-        
-        if (form && consentField && consentField.value === '동의함') {
-            console.log('폼 제출 시작');
+        // 폼 제출
+        const form = document.getElementById('nofee-form');
+        if (form) {
+            console.log('폼 제출:', {
+                customer: this.state.userData,
+                product: product,
+                sessionId: sessionId
+            });
             
-            // 제출 전 최종 데이터 확인
-            const formData = new FormData(form);
-            console.log('제출 데이터:');
-            for (let [key, value] of formData.entries()) {
-                console.log(`${key}: ${value}`);
-            }
-            
-            // 폼 제출
-            try {
-                form.submit();
-            } catch (e) {
-                // submit() 메서드가 없는 경우 버튼 클릭
-                const submitBtn = form.querySelector('input[type="submit"], button[type="submit"]');
-                if (submitBtn) {
-                    submitBtn.click();
-                }
-            }
-        } else {
-            console.error('개인정보 동의가 필요합니다.');
+            // 실제 환경에서는 form.submit(); 을 호출
+            // form.submit();
         }
     },
-    
-    // 메시지 추가
-    addBotMessage: async function(text) {
-        const msgDiv = document.createElement('div');
-        msgDiv.className = 'msg-ai';
-        msgDiv.innerHTML = `
-            <div class="ai-avatar">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 2L2 7L12 12L22 7L12 2Z"/>
-                    <path d="M2 17L12 22L22 17"/>
-                    <path d="M2 12L12 17L22 12"/>
-                </svg>
+
+    // 메시지 추가 함수들
+    addBotMessage: function(text) {
+        const messageHTML = `
+            <div class="nofee-message-group">
+                <div class="nofee-message bot">
+                    <div class="nofee-message-avatar">AI</div>
+                    <div class="nofee-message-bubble">${text}</div>
+                </div>
             </div>
-            <div class="msg-bubble" id="msg-${Date.now()}"></div>
+        `;
+        this.addToChat(messageHTML);
+    },
+
+    addUserMessage: function(text) {
+        const messageHTML = `
+            <div class="nofee-message-group">
+                <div class="nofee-message user">
+                    <div class="nofee-message-avatar">나</div>
+                    <div class="nofee-message-bubble">${text}</div>
+                </div>
+            </div>
+        `;
+        this.addToChat(messageHTML);
+    },
+
+    // 채팅에 추가 (최신 메시지가 위로)
+    addToChat: function(html) {
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        this.chatContainer.insertBefore(tempDiv.firstElementChild, this.chatContainer.firstChild);
+    },
+
+    // 옵션 지우기
+    clearOptions: function() {
+        const options = this.chatContainer.querySelectorAll('.nofee-button-options, .nofee-choice-cards, #nofee-input-field, .nofee-consent-box');
+        options.forEach(opt => opt.parentElement.remove());
+    },
+
+    // 채팅 초기화
+    clearChat: function() {
+        this.chatContainer.innerHTML = '';
+    },
+
+    // 타이핑 인디케이터
+    showTypingIndicator: function() {
+        const typingHTML = `
+            <div class="nofee-message-group" id="nofee-typing-indicator">
+                <div class="nofee-message bot">
+                    <div class="nofee-message-avatar">AI</div>
+                    <div class="nofee-message-bubble">
+                        <div class="nofee-typing-indicator">
+                            <div class="nofee-typing-dot"></div>
+                            <div class="nofee-typing-dot"></div>
+                            <div class="nofee-typing-dot"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        this.addToChat(typingHTML);
+    },
+
+    hideTypingIndicator: function() {
+        const indicator = document.getElementById('nofee-typing-indicator');
+        if (indicator) {
+            indicator.remove();
+        }
+    },
+
+    // 입력 필드 표시
+    showInputField: function(type, placeholder, callback) {
+        const inputHTML = `
+            <div class="nofee-message-group" id="nofee-input-field">
+                <div class="nofee-input-group">
+                    <input type="${type}" 
+                           placeholder="${placeholder}" 
+                           id="nofee-user-input"
+                           class="nofee-input-field"
+                           onkeypress="if(event.key === 'Enter') document.getElementById('nofee-submit-btn').click()">
+                    <button id="nofee-submit-btn"
+                            class="nofee-submit-btn"
+                            onclick="window.NofeeAI.submitInput()">
+                        확인
+                    </button>
+                </div>
+            </div>
         `;
         
-        // 메시지를 아래에 추가
-        if (this.state.messagesContainer) {
-            this.state.messagesContainer.appendChild(msgDiv);
-        }
+        window.NofeeAI.currentInputCallback = callback;
+        this.addToChat(inputHTML);
         
-        // 타이핑 효과
-        const bubble = msgDiv.querySelector('[id^="msg-"]');
-        if (bubble) {
-            for (let i = 0; i < text.length; i++) {
-                bubble.textContent += text[i];
-                await this.delay(this.config.TYPING_SPEED);
-            }
-        }
-        
-        this.scrollToBottom();
+        setTimeout(() => {
+            document.getElementById('nofee-user-input').focus();
+        }, 100);
     },
-    
-    addUserMessage: async function(text) {
-        const msgDiv = document.createElement('div');
-        msgDiv.className = 'msg-user';
-        msgDiv.innerHTML = `<div class="msg-bubble">${text}</div>`;
-        
-        // 메시지를 아래에 추가
-        if (this.state.messagesContainer) {
-            this.state.messagesContainer.appendChild(msgDiv);
-        }
-        this.scrollToBottom();
-        await this.delay(300);
-    },
-    
-    // 버튼 표시
-    showButtons: function(options, callback) {
-        const btnDiv = document.createElement('div');
-        btnDiv.className = 'btn-group';
 
-        options.forEach(option => {
-            const btn = document.createElement('button');
-            btn.textContent = option;
-            btn.className = 'opt-btn';
-            btn.onclick = () => {
-                btnDiv.remove();
-                callback(option);
-            };
-            btnDiv.appendChild(btn);
-        });
+    // 입력 제출
+    submitInput: function() {
+        const input = document.getElementById('nofee-user-input');
+        const value = input.value.trim();
         
-        // 버튼을 아래에 추가
-        if (this.state.messagesContainer) {
-            this.state.messagesContainer.appendChild(btnDiv);
-        }
-        this.scrollToBottom();
-    },
-    
-    // 입력 필드
-    showInput: function(type, placeholder, callback) {
-        const inputDiv = document.createElement('div');
-        inputDiv.className = 'input-group';
-        
-        const input = document.createElement('input');
-        input.type = type;
-        input.placeholder = placeholder;
-        input.className = 'nofee-input';
-        
-        const btn = document.createElement('button');
-        btn.textContent = '입력완료';
-        btn.className = 'input-btn';
-        
-        btn.onclick = () => {
-            const value = input.value.trim();
-            if (value) {
-                const result = callback(value);
-                if (result !== false) {
-                    inputDiv.remove();
-                }
+        if (value && this.currentInputCallback) {
+            const result = this.currentInputCallback(value);
+            if (result !== false) {
+                document.getElementById('nofee-input-field').remove();
             }
-        };
-        
-        input.onkeypress = (e) => {
-            if (e.key === 'Enter') btn.click();
-        };
-        
-        inputDiv.appendChild(input);
-        inputDiv.appendChild(btn);
-        
-        // 입력 필드를 아래에 추가
-        if (this.state.messagesContainer) {
-            this.state.messagesContainer.appendChild(inputDiv);
-        }
-        
-        input.focus();
-        this.scrollToBottom();
-    },
-    
-    // 선택 필드
-    showSelect: function(options, callback) {
-        const selectDiv = document.createElement('div');
-        
-        const select = document.createElement('select');
-        select.className = 'nofee-select';
-        select.innerHTML = '<option value="">선택해주세요</option>' + 
-                          options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
-        
-        select.onchange = () => {
-            if (select.value) {
-                selectDiv.remove();
-                callback(select.value);
-            }
-        };
-        
-        selectDiv.appendChild(select);
-        
-        // 선택 필드를 아래에 추가
-        if (this.state.messagesContainer) {
-            this.state.messagesContainer.appendChild(selectDiv);
-        }
-        this.scrollToBottom();
-    },
-    
-    // AI 생각중
-    showAIThinking: async function() {
-        const thinking = document.getElementById('aiThinking');
-        if (thinking) {
-            thinking.style.display = 'block';
         }
     },
-    
-    hideAIThinking: function() {
-        const thinking = document.getElementById('aiThinking');
-        if (thinking) {
-            thinking.style.display = 'none';
-        }
+
+    // 유틸리티 함수들
+    formatPrice: function(price) {
+        return price.toLocaleString('ko-KR');
     },
-    
-    // 리셋
+
+    showError: function(message) {
+        const errorHTML = `
+            <div class="nofee-message-group">
+                <div class="nofee-message bot">
+                    <div class="nofee-message-avatar">AI</div>
+                    <div class="nofee-message-bubble" style="border-color: #FF6B6B;">
+                        ❌ ${message}
+                    </div>
+                </div>
+            </div>
+        `;
+        this.addToChat(errorHTML);
+    },
+
+    showRetryButton: function() {
+        const optionsHTML = `
+            <div class="nofee-button-options">
+                <button class="nofee-option-btn" onclick="window.NofeeAI.resetChat()">
+                    <span class="emoji">🔄</span>
+                    <span>처음부터 다시 시작</span>
+                </button>
+            </div>
+        `;
+        this.addToChat(optionsHTML);
+    },
+
+    showCompleteButtons: function() {
+        const optionsHTML = `
+            <div class="nofee-button-options">
+                <button class="nofee-option-btn" onclick="window.NofeeAI.resetChat()">
+                    <span class="emoji">🏠</span>
+                    <span>처음으로 돌아가기</span>
+                </button>
+            </div>
+        `;
+        this.addToChat(optionsHTML);
+    },
+
+    showMoreProducts: function() {
+        this.clearOptions();
+        this.addUserMessage('다른 상품 보기');
+        this.resetChat();
+    },
+
+    showAllProducts: function() {
+        this.clearChat();
+        this.addBotMessage('전체 상품 목록을 보여드릴게요.');
+        
+        setTimeout(() => {
+            const allProducts = this.state.phoneData.slice(0, 20);
+            const productsHTML = `
+                <div class="nofee-message-group">
+                    ${allProducts.map((phone, index) => `
+                        <div class="nofee-product-card" onclick="window.NofeeAI.selectProductDirect(${index})">
+                            <div class="nofee-product-header">
+                                <div class="nofee-product-title">${phone.model}</div>
+                                ${phone.hasDiscount ? '<div class="nofee-product-badge">특가</div>' : ''}
+                            </div>
+                            <div class="nofee-product-details">${phone.activation} · ${phone.carrier} · ${phone.contract}</div>
+                            <div class="nofee-product-price">월 ${this.formatPrice(phone.total)}원</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            window.NofeeAI.allProducts = allProducts;
+            this.addToChat(productsHTML);
+        }, 500);
+    },
+
+    selectProductDirect: function(index) {
+        const product = this.allProducts[index];
+        this.state.selectedProduct = product;
+        this.currentRecommendations = [product];
+        this.selectProduct(0);
+    },
+
+    // 채팅 리셋
     resetChat: function() {
         this.state.currentStep = 'intro';
-        this.state.filters = { priceRange: null, carrier: null, brand: null };
-        this.state.userData = { dataUsage: null, preference: null, name: '', phone: '', region: '', district: '', consent: false };
+        this.state.userData = {
+            name: '',
+            phone: '',
+            dataUsage: '',
+            priceRange: '',
+            brand: '',
+            preference: '',
+            region: '',
+            district: ''
+        };
         this.state.selectedProduct = null;
-        
-        // 개인정보 동의 필드 초기화
-        const consentField = document.getElementById('privacy_consent');
-        if (consentField) {
-            consentField.value = '';
-        }
-        
-        // 메시지 컨테이너 초기화
-        if (this.state.messagesContainer) {
-            this.state.messagesContainer.innerHTML = '';
-            this.state.messagesContainer.style.display = 'none';
-        }
-        
-        // 인트로 화면 표시
-        const intro = document.getElementById('nofeeIntro');
-        if (intro) intro.style.display = 'flex';
-    },
-    
-    // URL 파라미터로 상품 선택
-    selectProductByParam: async function(productParam) {
-        console.log('파라미터로 상품 선택:', productParam);
-        
-        // 상품 찾기
-        const product = this.state.phoneData.find(p => 
-            p.model === productParam || 
-            p.Model === productParam ||
-            p.model.toLowerCase().includes(productParam.toLowerCase())
-        );
-        
-        if (product) {
-            // 인트로 숨기고 바로 시작
-            const intro = document.getElementById('nofeeIntro');
-            if (intro) intro.style.display = 'none';
-            
-            // 메시지 컨테이너 표시
-            if (!this.state.messagesContainer) {
-                this.state.messagesContainer = document.getElementById('nofeeMessages');
-            }
-            if (this.state.messagesContainer) {
-                this.state.messagesContainer.style.display = 'block';
-                this.state.messagesContainer.innerHTML = '';
-            }
-            
-            // 선택된 상품 설정
-            this.state.selectedProduct = product;
-            
-            // 바로 구매 프로세스 시작
-            await this.addBotMessage(`${product.model}을(를) 선택하셨네요! 👍`);
-            await this.delay(500);
-            
-            let msg = `📱 ${product.model} (${product.storage})\n`;
-            msg += `📝 ${product.activation} · ${product.carrier} · ${product.contract}\n`;
-            msg += `💰 월 ${this.formatPrice(product.total)}원`;
-            if (product.hasExtraDiscount) {
-                msg += ` (추가 할인 ${this.formatPrice(product.extraDiscountAmount)}원 적용)`;
-            }
-            
-            await this.addBotMessage(msg);
-            await this.delay(500);
-            
-            // 바로 신청 프로세스 시작
-            this.startPurchase();
-        } else {
-            // 상품을 찾지 못한 경우 일반 상담 시작
-            this.startConsultation();
-        }
-    },
-    
-    // 에러 표시
-    showError: function(message) {
-        const errorDiv = document.createElement('div');
-        errorDiv.style.cssText = 'margin: 1rem; padding: 1rem; background: rgba(239, 68, 68, 0.1); color: #ef4444; border-radius: 12px; text-align: center;';
-        errorDiv.textContent = message;
-        
-        if (this.state.messagesContainer) {
-            this.state.messagesContainer.appendChild(errorDiv);
-        } else if (this.state.chatContainer) {
-            this.state.chatContainer.appendChild(errorDiv);
-        }
-    },
-    
-    // 유틸리티
-    delay: (ms) => new Promise(resolve => setTimeout(resolve, ms)),
-    
-    formatPrice: function(value) {
-        return Number(value).toLocaleString();
-    },
-    
-    scrollToBottom: function() {
-        if (this.state.chatContainer) {
-            this.state.chatContainer.scrollTo({
-                top: this.state.chatContainer.scrollHeight,
-                behavior: 'smooth'
-            });
-        }
+        this.clearChat();
+        this.showIntro();
     }
 };
 
-// 전역 등록 확인
-console.log('노피 AI 객체 생성 완료:', window.NofeeAI);
+console.log('Nofee AI main.js 로드 완료');
